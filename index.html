@@ -521,8 +521,8 @@ const World = {
     Assets.init();
     this.canvas = document.getElementById('world-canvas');
     this.ctx = this.canvas.getContext('2d');
-    this.canvas.width = 800;
-    this.canvas.height = 320;
+    this.canvas.width = this.canvas.clientWidth || 800;
+    this.canvas.height = this.canvas.clientHeight || 320;
     this.ctx.imageSmoothingEnabled = false;
 
     // 電腦鍵盤監聽
@@ -884,17 +884,6 @@ const Puzzle = {
 };
 
 window.onload = () => World.init();
-  init() {
-    Assets.init();
-    this.canvas = document.getElementById('world-canvas');
-    this.ctx = this.canvas.getContext('2d');
-    
-    // 【修改這裡】讓畫布自動抓取網頁實際顯示的大小，避免被強制拉扁
-    this.canvas.width = this.canvas.clientWidth || 800;
-    this.canvas.height = this.canvas.clientHeight || 320;
-    
-    this.ctx.imageSmoothingEnabled = false;
-    // ... 後續保持不變 ...
 </script>
 </body>
 </html>
