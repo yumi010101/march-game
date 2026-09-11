@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>誰在三月失了神 - 手機/電腦雙用 Demo</title>
 <style>
+  <style>
   :root {
     --bg-dark: #07090e;
     --panel-bg: #11151f;
@@ -50,10 +51,11 @@
   }
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
 
-  /* 探索畫面 */
+  /* 【真正的解法】鎖定原比例，高度自動跟隨，人物絕對不會變扁 */
   #stage-wrap {
     width: 100%;
-    height: 320px;
+    aspect-ratio: 800 / 320; 
+    height: auto; 
     background: #020305;
     position: relative;
     overflow: hidden;
@@ -63,6 +65,7 @@
     height: 100%;
     display: block;
     image-rendering: pixelated;
+    object-fit: contain;
   }
 
   /* 懸浮提示 */
@@ -149,7 +152,7 @@
   }
   .action-btn-sm:active { background: #30363d; border-color: var(--accent); }
 
-  /* 解謎彈窗 */
+  /* 解謎與劇情彈窗 */
   #puzzle-overlay {
     position: absolute;
     inset: 0;
@@ -167,31 +170,11 @@
   }
   .p-card { background: #0b0e14; border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
   .p-title { font-size: 0.8rem; color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between; }
-  
-  button.p-btn {
-    padding: 8px;
-    background: #1f242c;
-    border: 1px solid var(--border);
-    color: #fff;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
+  button.p-btn { padding: 8px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
   button.p-btn.active { background: #1f6feb; border-color: #58a6ff; }
-  
-  .sync-act-btn {
-    padding: 12px;
-    background: #21262d;
-    border: 1px solid var(--border);
-    color: #c9d1d9;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-  }
+  .sync-act-btn { padding: 12px; background: #21262d; border: 1px solid var(--border); color: #c9d1d9; border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
   .sync-act-btn.ready { background: var(--green); color: #fff; }
 
-  /* 劇情彈窗 */
   #story-modal {
     position: absolute;
     inset: 0;
@@ -207,7 +190,8 @@
   #story-modal.show { display: flex; }
   #story-modal h2 { color: var(--memory); font-size: 1.2rem; margin-bottom: 12px; }
   #story-modal p { max-width: 500px; line-height: 1.8; font-size: 0.85rem; color: #e6edf3; margin-bottom: 20px; white-space: pre-line; }
-  /* --- 手機響應式修正（讓畫面完美適應手機螢幕） --- */
+
+  /* --- 手機響應式修正 --- */
   @media (max-width: 768px) {
     body {
       padding: 0;
@@ -219,15 +203,13 @@
       border-radius: 0;
       border: none;
     }
-    #stage-wrap {
-      height: 45vh; /* 調整探索畫面的高度佔比 */
-    }
+    /* 已經把害人物變扁的兇手移除了！ */
     #dialogue-area {
       min-height: 120px;
       padding: 10px 14px;
     }
     .dialogue-body {
-      font-size: 0.85rem; /* 縮小一點手機上的字體避免擋住 */
+      font-size: 0.85rem;
     }
     #mobile-controls {
       padding: 8px 12px;
@@ -242,6 +224,7 @@
     }
   }
 </style>
+ </style>
 </head>
 <body>
 
