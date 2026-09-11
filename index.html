@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>誰在三月失了神 - 手機/電腦雙用 Demo</title>
+<style>
+  :root {
+    --bg-dark: #07090e;
+    --panel-bg: #11151f;
+    --border: #232a3d;
+    --text: #d3d8e2;
+    --accent: #58a6ff;
+    --memory: #e5b544;
+    --danger: #f85149;
+    --green: #3fb950;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  body {
+    background: var(--bg-dark);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 8px;
+  }
+  #game-wrapper {
+    width: 100%;
+    max-width: 860px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 16px 50px rgba(0,0,0,0.85);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  header {
+    background: #0b0e14;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  .badge { color: var(--memory); border: 1px solid var(--memory); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+
+  /* 探索畫面 */
+  #stage-wrap {
+    width: 100%;
+    height: 320px;
+    background: #020305;
+    position: relative;
+    overflow: hidden;
+  }
+  canvas#world-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  /* 懸浮提示 */
+  #interact-prompt {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(13, 17, 23, 0.92);
+    border: 1px solid var(--memory);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 0 12px rgba(229, 181, 68, 0.35);
+  }
+
+  /* 手機專屬虛擬控制器 */
+  #mobile-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #0b0e14;
+    border-top: 1px solid var(--border);
+  }
+  .d-pad { display: flex; gap: 12px; }
+  .touch-btn {
+    width: 54px;
+    height: 50px;
+    background: #1f2633;
+    border: 1px solid var(--border);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+  .touch-btn:active { background: var(--accent); }
+  .interact-btn {
+    width: 90px;
+    height: 50px;
+    background: #252e3d;
+    border: 1px solid var(--memory);
+    color: var(--memory);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+  .interact-btn:active { background: var(--memory); color: #000; }
+
+  /* 底部對話區 */
+  #dialogue-area {
+    background: #090c12;
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .speaker-name { font-size: 0.8rem; font-weight: bold; color: var(--accent); }
+  .dialogue-body { font-size: 0.88rem; line-height: 1.5; color: #e6edf3; }
+  .dialogue-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .action-btn-sm {
+    padding: 6px 12px;
+    background: #1f242c;
+    border: 1px solid var(--border);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .action-btn-sm:active { background: #30363d; border-color: var(--accent); }
+
+  /* 解謎彈窗 */
+  #puzzle-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(7, 9, 14, 0.98);
+    z-index: 30;
+    display: none;
+    flex-direction: column;
+    padding: 14px;
+    overflow-y: auto;
+  }
+  #puzzle-overlay.show { display: flex; }
+  .puzzle-grid { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+  @media (min-width: 600px) {
+    .puzzle-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  }
+  .p-card { background: #0b0e14; border: 1px solid var(--border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .p-title { font-size: 0.8rem; color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between; }
+  
+  button.p-btn {
+    padding: 8px;
+    background: #1f242c;
+    border: 1px solid var(--border);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  button.p-btn.active { background: #1f6feb; border-color: #58a6ff; }
+  
+  .sync-act-btn {
+    padding: 12px;
+    background: #21262d;
+    border: 1px solid var(--border);
+    color: #c9d1d9;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .sync-act-btn.ready { background: var(--green); color: #fff; }
+
+  /* 劇情彈窗 */
+  #story-modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 5, 8, 0.98);
+    z-index: 50;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    text-align: center;
+  }
+  #story-modal.show { display: flex; }
+  #story-modal h2 { color: var(--memory); font-size: 1.2rem; margin-bottom: 12px; }
+  #story-modal p { max-width: 500px; line-height: 1.8; font-size: 0.85rem; color: #e6edf3; margin-bottom: 20px; white-space: pre-line; }
+</style>
+</head>
+<body>
+
+<div id="game-wrapper">
+  <header>
+    <div><strong>誰在三月失了神</strong> <span id="chapter-sub" style="color:#6e7681; font-size:0.75rem; margin-left:6px;">第一幕 · 咖啡廳</span></div>
+    <div class="badge" id="chapter-badge">第 1 場：碎琉璃</div>
+  </header>
+
+  <div id="stage-wrap">
+    <canvas id="world-canvas"></canvas>
+    <div id="interact-prompt">[E] 互動</div>
+  </div>
+
+  <!-- 手機觸控按鈕列 -->
+  <div id="mobile-controls">
+    <div class="d-pad">
+      <button class="touch-btn" id="btn-left">◀</button>
+      <button class="touch-btn" id="btn-right">▶</button>
+    </div>
+    <button class="interact-btn" id="btn-act">E 互動</button>
+  </div>
+
+  <!-- 對話區域 -->
+  <div id="dialogue-area">
+    <div class="speaker-name" id="speaker-tag">系統</div>
+    <div class="dialogue-body" id="dialogue-text">
+      咖啡廳正舉行聲音修復講座。吧檯旁傳來琉璃飾品被撞碎的響聲……
+    </div>
+    <div class="dialogue-actions" id="dialogue-actions"></div>
+  </div>
+
+  <!-- 老戲院解謎介面 -->
+  <div id="puzzle-overlay">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--memory); font-size:0.95rem;">【雙軌共感：老戲院檢票打孔器】</h3>
+      <button class="p-btn" onclick="Puzzle.close()" style="padding:4px 8px;">返回戲院</button>
+    </div>
+
+    <div class="puzzle-grid">
+      <!-- 左：程曦視覺 -->
+      <div class="p-card">
+        <div class="p-title">
+          <span>程曦：觸摸共感</span>
+          <span id="p-v-status">未開啟</span>
+        </div>
+        <div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;">
+          <canvas id="vision-canvas" style="width:100%; height:100%;"></canvas>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; color:#8b949e; display:flex; justify-content:space-between;">
+            <span>感官過載</span>
+            <span id="p-overload-txt">0%</span>
+          </div>
+          <div style="width:100%; height:5px; background:#161b22; border-radius:3px; overflow:hidden; margin-top:2px;">
+            <div id="p-overload-bar" style="width:0%; height:100%; background:var(--accent); transition:0.1s;"></div>
+          </div>
+        </div>
+        <button class="p-btn" id="p-touch-btn" onclick="Puzzle.toggleTouch()">🖐 脫下手套觸摸打孔器 (聚焦)</button>
+      </div>
+
+      <!-- 右：李相暮音訊 -->
+      <div class="p-card">
+        <div class="p-title">
+          <span>李相暮：頻率去噪</span>
+          <span id="p-a-status" style="color:var(--danger);">高噪訊</span>
+        </div>
+        <div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;">
+          <canvas id="waveform-canvas" style="width:100%; height:100%;"></canvas>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; color:#8b949e; display:flex; justify-content:space-between;">
+            <span>低頻切除 (HPF)</span>
+            <span id="hpf-val-txt">60 Hz</span>
+          </div>
+          <input type="range" id="slider-hpf" min="20" max="500" value="60" style="width:100%; accent-color:var(--memory);" oninput="Puzzle.onHpf(this.value)">
+        </div>
+        <div>
+          <div style="font-size:0.7rem; color:#8b949e; display:flex; justify-content:space-between;">
+            <span>人聲帶通 (BPF)</span>
+            <span id="bpf-val-txt">2900 Hz</span>
+          </div>
+          <input type="range" id="slider-bpf" min="400" max="3500" value="2900" style="width:100%; accent-color:var(--memory);" oninput="Puzzle.onBpf(this.value)">
+        </div>
+      </div>
+    </div>
+
+    <button class="sync-act-btn" id="sync-act-btn" onclick="Puzzle.attemptSync()">⚡ 雙軌記憶對齊 (SYNC)</button>
+  </div>
+
+  <!-- 劇情彈窗 -->
+  <div id="story-modal">
+    <h2 id="modal-title">標題</h2>
+    <p id="modal-desc">內容</p>
+    <button class="p-btn" id="modal-next-btn" style="padding:8px 24px;" onclick="Flow.onModalConfirm()">繼續章節</button>
+  </div>
+</div>
+
+<script>
+// 圖片載入系統
+const Assets = {
+  chengxiImg: new Image(),
+  xiangmuImg: new Image(),
+  chengxiLoaded: false,
+  xiangmuLoaded: false,
+
+  init() {
+    this.chengxiImg.src = 'chengxi.png';
+    this.chengxiImg.onload = () => { this.chengxiLoaded = true; };
+    this.xiangmuImg.src = 'xiangmu.png';
+    this.xiangmuImg.onload = () => { this.xiangmuLoaded = true; };
+  }
+};
+
+// Web Audio
+const Sfx = {
+  ctx: null,
+  noiseNode: null,
+  filterNode: null,
+
+  init() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const bufSize = this.ctx.sampleRate * 2;
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+    this.noiseNode = this.ctx.createBufferSource();
+    this.noiseNode.buffer = buf;
+    this.noiseNode.loop = true;
+
+    this.filterNode = this.ctx.createBiquadFilter();
+    this.filterNode.type = 'bandpass';
+    this.filterNode.frequency.value = 1000;
+    this.filterNode.Q.value = 3;
+
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0.03;
+
+    this.noiseNode.connect(this.filterNode).connect(gain).connect(this.ctx.destination);
+    this.noiseNode.start();
+  },
+
+  playStep() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(130 + Math.random() * 20, this.ctx.currentTime);
+    g.gain.setValueAtTime(0.04, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.1);
+    osc.connect(g).connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.1);
+  },
+
+  playGlassBreak() {
+    if (!this.ctx) return;
+    for (let i = 0; i < 4; i++) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(2200 + Math.random() * 1800, this.ctx.currentTime + i * 0.04);
+      g.gain.setValueAtTime(0.1, this.ctx.currentTime + i * 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.3);
+      osc.connect(g).connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + i * 0.04);
+      osc.stop(this.ctx.currentTime + 0.35);
+    }
+  },
+
+  playChimes() {
+    if (!this.ctx) return;
+    [311, 392, 466, 622].forEach((f, i) => {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.1);
+      g.gain.setValueAtTime(0.08, this.ctx.currentTime + i * 0.1);
+      g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 2.5);
+      osc.connect(g).connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + i * 0.1);
+      osc.stop(this.ctx.currentTime + 2.6);
+    });
+  }
+};
+
+// 劇情流
+const Flow = {
+  currentAct: 1,
+
+  setAct(act) {
+    this.currentAct = act;
+    const sub = document.getElementById('chapter-sub');
+    const badge = document.getElementById('chapter-badge');
+    const dTag = document.getElementById('speaker-tag');
+    const dText = document.getElementById('dialogue-text');
+    const dActions = document.getElementById('dialogue-actions');
+    dActions.innerHTML = '';
+
+    if (act === 1) {
+      sub.innerText = "第一幕 · 咖啡廳";
+      badge.innerText = "第 1 場：碎琉璃";
+      World.player.x = 200;
+      World.partner.x = 600;
+      dTag.innerText = "李相暮";
+      dText.innerText = "妳的手套滲血了，不要動。用這條手帕止血吧。";
+      dActions.innerHTML = `<button class="action-btn-sm" onclick="Flow.cafeGiveHandkerchief()">【接過手帕止血】</button>`;
+    } else if (act === 2) {
+      sub.innerText = "第二幕 · 老戲院";
+      badge.innerText = "第 14-18 場：舊打孔器";
+      World.player.x = 120;
+      World.partner.x = 640;
+      dTag.innerText = "程曦";
+      dText.innerText = "空氣裡有一種受潮的味道……李相暮，你聽見舊收音機的聲音了嗎？走到中間檢查售票鐵盒。";
+    } else if (act === 3) {
+      sub.innerText = "第三幕 · 基隆防波堤";
+      badge.innerText = "第 92-94 場：雨夜告別";
+      World.player.x = 160;
+      World.partner.x = 580;
+      dTag.innerText = "李相暮";
+      dText.innerText = "晚上很冷，海風這麼大，妳怎麼一個人跑來這裡？……手套呢？";
+      dActions.innerHTML = `<button class="action-btn-sm" onclick="Flow.breakwaterDropGlove()">【撿起掉落的手套，披上外套】</button>`;
+    }
+  },
+
+  cafeGiveHandkerchief() {
+    Sfx.playGlassBreak();
+    document.getElementById('speaker-tag').innerText = "程曦";
+    document.getElementById('dialogue-text').innerText = "「……謝謝。但你的修復音樂太乾淨了，把原本痛苦又真實的破音都當成垃圾丟掉了。」";
+    document.getElementById('dialogue-actions').innerHTML = `
+      <button class="action-btn-sm" onclick="Flow.showModal('【受邀參與電影創作】', '李相暮收回手帕：『聲音若沒有人聽得懂，就沒有留存的意義。』\\n數日後，兩人一同受邀前往基隆老戲院，尋找未被記錄的歷史真相。')">
+        前往老戲院 ➔
+      </button>
+    `;
+  },
+
+  breakwaterDropGlove() {
+    Sfx.playChimes();
+    document.getElementById('speaker-tag').innerText = "程曦";
+    document.getElementById('dialogue-text').innerText = "灰色手套滑落在防波堤的積水裡。李相暮彎腰替她撿起，將自己的深色羊毛大衣輕輕披上她的肩頭。";
+    document.getElementById('dialogue-actions').innerHTML = `
+      <button class="action-btn-sm" onclick="Flow.showModal('【終局：三月的基隆港】', '「我三月要去巴黎了，那裡有個研究記憶與聲音共振的實驗室。」李相暮望向海面。\\n「那裡應該沒有雜音吧？」程曦輕聲問。\\n「也許……會太安靜。」\\n海風中，只有微弱的心跳鋼琴旋律靜靜流淌。')">
+        查看尾聲 ➔
+      </button>
+    `;
+  },
+
+  showModal(title, desc) {
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-desc').innerText = desc;
+    document.getElementById('story-modal').classList.add('show');
+  },
+
+  onModalConfirm() {
+    document.getElementById('story-modal').classList.remove('show');
+    if (this.currentAct === 1) this.setAct(2);
+    else if (this.currentAct === 2) this.setAct(3);
+    else location.reload();
+  }
+};
+
+// 探索世界
+const World = {
+  canvas: null,
+  ctx: null,
+  keys: {},
+
+  player: { x: 200, y: 190, speed: 3, dir: 1, isMoving: false, walkFrame: 0 },
+  partner: { x: 600, y: 190 },
+  activePrompt: null,
+
+  init() {
+    Assets.init();
+    this.canvas = document.getElementById('world-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.canvas.width = 800;
+    this.canvas.height = 320;
+    this.ctx.imageSmoothingEnabled = false;
+
+    // 電腦鍵盤監聽
+    window.addEventListener('keydown', (e) => {
+      this.keys[e.key.toLowerCase()] = true;
+      if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(e.key.toLowerCase())) e.preventDefault();
+      if (e.key.toLowerCase() === 'e') this.handleInteract();
+      if (e.key === 'Escape') Puzzle.close();
+      Sfx.init();
+    });
+    window.addEventListener('keyup', (e) => { this.keys[e.key.toLowerCase()] = false; });
+
+    // 手機虛擬按鈕監聽 (Touch Events)
+    this.setupTouchControl('btn-left', 'arrowleft');
+    this.setupTouchControl('btn-right', 'arrowright');
+    document.getElementById('btn-act').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      Sfx.init();
+      this.handleInteract();
+    });
+    document.getElementById('btn-act').addEventListener('click', () => {
+      Sfx.init();
+      this.handleInteract();
+    });
+
+    Flow.setAct(1);
+    this.loop();
+  },
+
+  setupTouchControl(elemId, keyName) {
+    const el = document.getElementById(elemId);
+    const press = (e) => { e.preventDefault(); Sfx.init(); this.keys[keyName] = true; };
+    const release = (e) => { e.preventDefault(); this.keys[keyName] = false; };
+    el.addEventListener('touchstart', press);
+    el.addEventListener('touchend', release);
+    el.addEventListener('mousedown', press);
+    el.addEventListener('mouseup', release);
+  },
+
+  handleInteract() {
+    if (Flow.currentAct === 1) {
+      if (this.activePrompt === 'PARTNER') Flow.cafeGiveHandkerchief();
+    } else if (Flow.currentAct === 2) {
+      if (this.activePrompt === 'ITEM') Puzzle.open();
+      if (this.activePrompt === 'PARTNER') {
+        document.getElementById('speaker-tag').innerText = "李相暮";
+        document.getElementById('dialogue-text').innerText = "「這座戲院的空氣殘響長達五秒半……收音機裡有隱藏的語音，妳快觸碰鐵盒看看。」";
+      }
+    } else if (Flow.currentAct === 3) {
+      if (this.activePrompt === 'PARTNER') Flow.breakwaterDropGlove();
+    }
+  },
+
+  update() {
+    let moving = false;
+    if (this.keys['a'] || this.keys['arrowleft']) {
+      this.player.x -= this.player.speed;
+      this.player.dir = -1;
+      moving = true;
+    }
+    if (this.keys['d'] || this.keys['arrowright']) {
+      this.player.x += this.player.speed;
+      this.player.dir = 1;
+      moving = true;
+    }
+    this.player.x = Math.max(60, Math.min(740, this.player.x));
+    this.player.isMoving = moving;
+
+    if (moving) {
+      this.player.walkFrame += 0.2;
+      if (Math.sin(this.player.walkFrame) > 0.9) Sfx.playStep();
+    }
+
+    const prompt = document.getElementById('interact-prompt');
+    const distPartner = Math.abs(this.player.x - this.partner.x);
+    const distItem = Math.abs(this.player.x - 380);
+
+    if (Flow.currentAct === 2 && distItem < 60) {
+      this.activePrompt = 'ITEM';
+      prompt.style.display = 'block';
+      prompt.style.left = '380px';
+      prompt.style.top = '140px';
+      prompt.innerText = "點擊 E 觸摸鐵盒";
+    } else if (distPartner < 70) {
+      this.activePrompt = 'PARTNER';
+      prompt.style.display = 'block';
+      prompt.style.left = `${this.partner.x}px`;
+      prompt.style.top = '130px';
+      prompt.innerText = "點擊 E 互動";
+    } else {
+      this.activePrompt = null;
+      prompt.style.display = 'none';
+    }
+  },
+
+  draw() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    if (Flow.currentAct === 1) {
+      ctx.fillStyle = "#140f0c";
+      ctx.fillRect(0, 0, this.canvas.width, 200);
+      ctx.fillStyle = "#2b1e16";
+      ctx.fillRect(0, 200, this.canvas.width, 120);
+      ctx.fillStyle = "#58a6ff";
+      for (let i = 0; i < 6; i++) ctx.fillRect(320 + i * 8, 220 + (i % 3) * 4, 3, 3);
+    } else if (Flow.currentAct === 2) {
+      ctx.fillStyle = "#0a0d14";
+      ctx.fillRect(0, 0, this.canvas.width, 200);
+      ctx.fillStyle = "#121722";
+      ctx.fillRect(0, 200, this.canvas.width, 120);
+      ctx.fillStyle = "#1e2533";
+      ctx.fillRect(340, 180, 75, 45);
+      ctx.fillStyle = "#e5b544";
+      ctx.fillRect(368, 174, 18, 10);
+    } else if (Flow.currentAct === 3) {
+      ctx.fillStyle = "#050912";
+      ctx.fillRect(0, 0, this.canvas.width, 200);
+      ctx.fillStyle = "#0b121e";
+      ctx.fillRect(0, 200, this.canvas.width, 120);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      for (let i = 0; i < 20; i++) {
+        const rx = Math.random() * this.canvas.width;
+        const ry = Math.random() * this.canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx - 6, ry + 14);
+        ctx.stroke();
+      }
+    }
+
+    this.renderXiangMu(this.partner.x, this.partner.y);
+    this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame) * 3 : 0);
+  },
+
+  renderChengXi(x, y, dir, bounce) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(x, y + bounce);
+    ctx.scale(dir, 1);
+
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.beginPath();
+    ctx.ellipse(0, 72, 20, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (Assets.chengxiLoaded) {
+      const drawH = 135;
+      const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH;
+      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -60, drawW, drawH);
+    } else {
+      ctx.fillStyle = "#3e2723"; ctx.fillRect(-14, -34, 8, 30);
+      ctx.fillStyle = "#f5d0b5"; ctx.fillRect(-7, -44, 15, 16);
+      ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-9, -26, 20, 24);
+      ctx.fillStyle = "#6d4c41"; ctx.fillRect(-13, -2, 26, 46);
+      ctx.fillStyle = "#3e2723"; ctx.fillRect(-9, 44, 7, 28); ctx.fillRect(2, 44, 7, 28);
+    }
+    ctx.restore();
+  },
+
+  renderXiangMu(x, y) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(x, y);
+
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.beginPath();
+    ctx.ellipse(0, 74, 22, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (Assets.xiangmuLoaded) {
+      const drawH = 142;
+      const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH;
+      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -65, drawW, drawH);
+    } else {
+      ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14);
+      ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15);
+      ctx.fillStyle = "#c53030"; ctx.fillRect(-12, -20, 24, 6);
+      ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48);
+      ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40);
+    }
+    ctx.restore();
+  },
+
+  loop() {
+    this.update();
+    this.draw();
+    requestAnimationFrame(() => this.loop());
+  }
+};
+
+// 雙軌解謎
+const Puzzle = {
+  isTouch: false,
+  overload: 0,
+  clarity: 0.1,
+  hpf: 60,
+  bpf: 2900,
+  isVReady: false,
+  isAReady: false,
+
+  open() {
+    document.getElementById('puzzle-overlay').classList.add('show');
+    this.initCanvases();
+    this.puzzleLoop();
+  },
+
+  close() {
+    document.getElementById('puzzle-overlay').classList.remove('show');
+    this.isTouch = false;
+  },
+
+  toggleTouch() {
+    this.isTouch = !this.isTouch;
+    const btn = document.getElementById('p-touch-btn');
+    if (this.isTouch) {
+      btn.classList.add('active');
+      btn.innerText = "🖐 正在共感中 (冷卻)";
+    } else {
+      btn.classList.remove('active');
+      btn.innerText = "🖐 脫下手套觸摸打孔器 (聚焦)";
+    }
+  },
+
+  onHpf(v) {
+    this.hpf = parseInt(v);
+    document.getElementById('hpf-val-txt').innerText = `${this.hpf} Hz`;
+    this.eval();
+  },
+
+  onBpf(v) {
+    this.bpf = parseInt(v);
+    document.getElementById('bpf-val-txt').innerText = `${this.bpf} Hz`;
+    if (Sfx.filterNode) Sfx.filterNode.frequency.setTargetAtTime(this.bpf, Sfx.ctx.currentTime, 0.05);
+    this.eval();
+  },
+
+  eval() {
+    const hpfOk = this.hpf >= 260;
+    const bpfOk = this.bpf >= 900 && this.bpf <= 1300;
+    const status = document.getElementById('p-a-status');
+
+    if (hpfOk && bpfOk) {
+      this.isAReady = true;
+      status.innerText = "【人聲鎖定】";
+      status.style.color = "var(--green)";
+      document.getElementById('speaker-tag').innerText = "收音機 (李相暮濾除警報中)";
+      document.getElementById('dialogue-text').innerText = "「媽媽，爸爸什麼時候回來？……爸爸說話有氣質，我要爸爸念詩！」";
+    } else {
+      this.isAReady = false;
+      status.innerText = hpfOk ? "搜尋童聲中..." : "低頻警報過載";
+      status.style.color = "var(--danger)";
+    }
+    this.updateBtn();
+  },
+
+  updateBtn() {
+    const btn = document.getElementById('sync-act-btn');
+    if (this.isVReady && this.isAReady) {
+      btn.classList.add('ready');
+      btn.innerText = "⚡ 記憶吻合，立即對齊 (SYNC)";
+    } else {
+      btn.classList.remove('ready');
+      btn.innerText = "⚡ 記憶對齊待命中";
+    }
+  },
+
+  attemptSync() {
+    if (this.isVReady && this.isAReady) {
+      Sfx.playChimes();
+      this.close();
+      Flow.showModal('【1947 年老戲院檢票口】', '小男孩抱膝蜷縮在大廳角落大哭，口中喊著「媽媽」。\\n年輕軍人何明傑手裡捏著喜劇電影票根，蹲下身摸摸孩子的頭，將眼淚用力嚥了回去。\\n\\n程曦顫抖著收回手指：「那位軍官……就是戲院老闆失蹤多年的父親！」');
+    } else {
+      alert("尚未完全對齊：\n1. 左側視覺需達 85% 清晰度。\n2. 右側低頻 >= 260Hz，帶通需在 900~1300Hz。");
+    }
+  },
+
+  initCanvases() {
+    this.vC = document.getElementById('vision-canvas');
+    this.vCtx = this.vC.getContext('2d');
+    this.vC.width = 300;
+    this.vC.height = 90;
+
+    this.wC = document.getElementById('waveform-canvas');
+    this.wCtx = this.wC.getContext('2d');
+    this.wC.width = 300;
+    this.wC.height = 90;
+    this.phase = 0;
+  },
+
+  puzzleLoop() {
+    if (!document.getElementById('puzzle-overlay').classList.contains('show')) return;
+
+    if (this.isTouch) {
+      this.overload = Math.min(100, this.overload + 0.35);
+      this.clarity = Math.min(1.0, this.clarity + 0.015);
+      if (this.overload >= 100) {
+        this.toggleTouch();
+        alert("【感官過載】程曦眼前發白陷入眩暈，被迫縮手！");
+      }
+    } else {
+      this.overload = Math.max(0, this.overload - 0.5);
+      this.clarity = Math.max(0.1, this.clarity - 0.015);
+    }
+
+    document.getElementById('p-overload-txt').innerText = `${Math.floor(this.overload)}%`;
+    const bar = document.getElementById('p-overload-bar');
+    bar.style.width = `${this.overload}%`;
+    bar.style.background = this.overload > 75 ? "var(--danger)" : "var(--accent)";
+
+    const vStat = document.getElementById('p-v-status');
+    if (this.clarity >= 0.85) {
+      this.isVReady = true;
+      vStat.innerText = "【清晰 85%+】";
+      vStat.style.color = "var(--memory)";
+    } else {
+      this.isVReady = false;
+      vStat.innerText = this.isTouch ? `聚焦中 (${Math.floor(this.clarity * 100)}%)` : "未開啟";
+      vStat.style.color = "#8b949e";
+    }
+
+    this.updateBtn();
+
+    const vctx = this.vCtx;
+    vctx.fillStyle = "#05070a";
+    vctx.fillRect(0, 0, this.vC.width, this.vC.height);
+    vctx.save();
+    vctx.translate(this.vC.width / 2, this.vC.height / 2);
+    vctx.globalAlpha = this.clarity;
+    vctx.strokeStyle = this.isVReady ? "#e5b544" : "#8b949e";
+    vctx.lineWidth = 1.5;
+    vctx.beginPath();
+    vctx.arc(-20, 8, 8, 0, Math.PI * 2);
+    vctx.rect(-26, 16, 12, 16);
+    vctx.arc(14, -6, 10, 0, Math.PI * 2);
+    vctx.moveTo(14, 4); vctx.lineTo(6, 22); vctx.lineTo(-10, 12);
+    vctx.stroke();
+    vctx.restore();
+
+    const wctx = this.wCtx;
+    wctx.fillStyle = "#030406";
+    wctx.fillRect(0, 0, this.wC.width, this.wC.height);
+    wctx.lineWidth = 1.5;
+    wctx.strokeStyle = this.isAReady ? "#3fb950" : "#f85149";
+    wctx.beginPath();
+    for (let i = 0; i <= 30; i++) {
+      const x = i * (this.wC.width / 30);
+      const amp = this.isAReady ? 10 : 20;
+      const n = this.isAReady ? Math.sin(i * 0.3 + this.phase) : (Math.random() - 0.5) * 2;
+      const y = this.wC.height / 2 + Math.sin(i * 0.4 + this.phase) * amp * n;
+      if (i === 0) wctx.moveTo(x, y);
+      else wctx.lineTo(x, y);
+    }
+    wctx.stroke();
+    this.phase += 0.15;
+
+    requestAnimationFrame(() => this.puzzleLoop());
+  }
+};
+
+window.onload = () => World.init();
+</script>
+</body>
+</html>
