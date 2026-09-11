@@ -207,6 +207,40 @@
   #story-modal.show { display: flex; }
   #story-modal h2 { color: var(--memory); font-size: 1.2rem; margin-bottom: 12px; }
   #story-modal p { max-width: 500px; line-height: 1.8; font-size: 0.85rem; color: #e6edf3; margin-bottom: 20px; white-space: pre-line; }
+  /* --- 手機響應式修正（讓畫面完美適應手機螢幕） --- */
+  @media (max-width: 768px) {
+    body {
+      padding: 0;
+      align-items: flex-start;
+    }
+    #game-wrapper {
+      max-width: 100%;
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+    }
+    #stage-wrap {
+      height: 45vh; /* 調整探索畫面的高度佔比 */
+    }
+    #dialogue-area {
+      min-height: 120px;
+      padding: 10px 14px;
+    }
+    .dialogue-body {
+      font-size: 0.85rem; /* 縮小一點手機上的字體避免擋住 */
+    }
+    #mobile-controls {
+      padding: 8px 12px;
+    }
+    .touch-btn {
+      width: 60px;
+      height: 44px;
+    }
+    .interact-btn {
+      width: 100px;
+      height: 44px;
+    }
+  }
 </style>
 </head>
 <body>
