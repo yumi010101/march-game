@@ -1,83 +1,67 @@
 const Assets = {
-  chengxiImg: new Image(), theaterBg: new Image(), chengxiLoaded: false, theaterBgLoaded: false,
-  init() { this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; }
+  chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(),
+  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false,
+  init() { 
+    this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
+    this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
+    this.xiangmuImg.src = 'xiangmu.png'; this.xiangmuImg.onload = () => this.xiangmuLoaded = true;
+  }
 };
 
 const Flow = {
-  currentAct: 2,
-  canInteract: false, // 控制是否可以觸發解謎
-  dialogueQueue: [],
-  onDialogueEnd: null,
+  currentAct: 2, canInteract: false, dialogueQueue: [], onDialogueEnd: null,
 
   startGame() { document.getElementById('start-screen').style.display = 'none'; },
   endGame() { document.getElementById('end-screen').style.display = 'flex'; },
   
-  // --- 視覺小說對話系統 ---
   startDialogue(queue, callback) {
-    this.dialogueQueue = [...queue];
-    this.onDialogueEnd = callback;
-    this.nextDialogue();
+    this.dialogueQueue = [...queue]; this.onDialogueEnd = callback; this.nextDialogue();
   },
   nextDialogue() {
-    const dTag = document.getElementById('speaker-tag'); 
-    const dText = document.getElementById('dialogue-text');
-    const dActions = document.getElementById('dialogue-actions');
-    
+    const dTag = document.getElementById('speaker-tag'); const dText = document.getElementById('dialogue-text'); const dActions = document.getElementById('dialogue-actions');
     if (this.dialogueQueue.length === 0) {
-      if (this.onDialogueEnd) this.onDialogueEnd();
-      else dActions.innerHTML = ""; // 預設清空按鈕
-      return;
+      if (this.onDialogueEnd) this.onDialogueEnd(); else dActions.innerHTML = ""; return;
     }
-    
     let current = this.dialogueQueue.shift();
-    dTag.innerText = current.n;
-    dText.innerText = current.t;
+    dTag.innerText = current.n; dText.innerText = current.t;
     dActions.innerHTML = `<button class="action-btn-sm" onclick="Flow.nextDialogue()">繼續 ➔</button>`;
   },
 
   setAct(act) {
-    this.currentAct = act;
-    this.canInteract = false; // 劇情沒跑完前不能互動
+    this.currentAct = act; this.canInteract = false; 
     const sub = document.getElementById('chapter-sub'); const badge = document.getElementById('chapter-badge');
     document.getElementById('dialogue-actions').innerHTML = "";
     
     if (act === 2) {
-      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 200;
+      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; 
+      World.player.x = 200; World.partner.x = 600; // 相暮在戲院右側
       this.startDialogue([
         { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" },
         { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" },
         { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" }
-      ], () => {
-        document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到桌子旁按下 [E] 觸碰黑膠)</span>`;
-        this.canInteract = true;
-      });
+      ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到桌子旁按下 [E] 觸碰黑膠)</span>`; this.canInteract = true; });
 
     } else if (act === 3) {
-      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 400;
+      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; 
+      World.player.x = 400; // 相暮不在房間，不會繪製
       this.startDialogue([
         { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" },
         { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" },
         { n: "程曦", t: "「海邊……」" },
         { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" }
-      ], () => {
-        document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到舊皮鞋旁按下 [E] 進入夢境)</span>`;
-        this.canInteract = true;
-      });
+      ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到舊皮鞋旁按下 [E] 進入夢境)</span>`; this.canInteract = true; });
 
     } else if (act === 4) {
-      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 250;
+      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; 
+      World.player.x = 250; World.partner.x = 550; // 相暮在酒吧右側
       this.startDialogue([
         { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" },
         { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" },
         { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" }
-      ], () => {
-        document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到破碎的鏡子前按下 [E] 凝視)</span>`;
-        this.canInteract = true;
-      });
+      ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到破碎的鏡子前按下 [E] 凝視)</span>`; this.canInteract = true; });
     }
   },
 
-  // 解謎破關後的劇情觸發
   afterVinylPuzzle() {
     this.startDialogue([
       { n: "系統", t: "一個穿著舞鞋的女孩身處昏黃燈光下的舞池，一邊跳舞，一邊哭泣，彷彿在低聲懇求：「不要走……求你……」" },
@@ -87,9 +71,7 @@ const Flow = {
       { n: "程曦", t: "「……對不起。」" },
       { n: "戲院老闆", t: "「沒事。對了，這是我偶然間找到的錄影機，看來是我叔叔和我媽媽在練習跳舞，不知道對你們有沒有幫助。」" },
       { n: "系統", t: "錄影機裡傳來輕快的圓舞曲。程曦小心撿起唱片，接過錄影機，決定回房間仔細梳理。" }
-    ], () => {
-      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(3)">進入下一幕 ➔</button>`;
-    });
+    ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(3)">進入下一幕 ➔</button>`; });
   },
 
   afterDreamPuzzle() {
@@ -101,18 +83,14 @@ const Flow = {
       { n: "李相暮", t: "「早上七點妳在幹嘛？」" },
       { n: "程曦", t: "「海邊、皮鞋、戲院、港口、軍人……」" },
       { n: "系統", t: "兩人比對了彼此的殘留記憶與樂譜，發現兩段命運開始重疊。隨後，他們跟著劇組來到了下一個勘景地。" }
-    ], () => {
-      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(4)">前往廢棄酒吧 ➔</button>`;
-    });
+    ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(4)">前往廢棄酒吧 ➔</button>`; });
   },
 
   afterDancePuzzle() {
     this.startDialogue([
       { n: "系統", t: "程曦下意識模仿鏡中李婉玉的動作，旋轉、跨步、單腳重心前傾……" },
       { n: "系統", t: "卻不幸失去平衡，整個人向後倒去！" }
-    ], () => {
-      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--danger); font-size:1.2rem; padding:16px;" onclick="Flow.catchHer()">[E] 李相暮接住她！</button>`;
-    });
+    ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--danger); font-size:1.2rem; padding:16px;" onclick="Flow.catchHer()">[E] 李相暮接住她！</button>`; });
   },
 
   catchHer() {
@@ -120,14 +98,12 @@ const Flow = {
       { n: "系統", t: "李相暮眼疾手快，一把接住她。" },
       { n: "系統", t: "兩人相視，呼吸交錯。" },
       { n: "系統", t: "空氣一陣靜默。" }
-    ], () => {
-      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--memory); color:#000; font-weight:bold;" onclick="Flow.endGame()">查看結尾</button>`;
-    });
+    ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--memory); color:#000; font-weight:bold;" onclick="Flow.endGame()">查看結尾</button>`; });
   }
 };
 
 const World = {
-  canvas: null, ctx: null, keys: {}, player: { x: 200, y: 190, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, activePrompt: null,
+  canvas: null, ctx: null, keys: {}, player: { x: 200, y: 190, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, partner: { x: 600, y: 190, dir: -1 }, activePrompt: null,
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
     this.canvas.width = 800; this.canvas.height = 320; this.ctx.imageSmoothingEnabled = false;
@@ -139,7 +115,7 @@ const World = {
   },
   setupTouch(id, key) { const el = document.getElementById(id); el.addEventListener('touchstart', e => { e.preventDefault(); this.keys[key] = true; }); el.addEventListener('touchend', e => { e.preventDefault(); this.keys[key] = false; }); },
   handleInteract() {
-    if (!Flow.canInteract) return; // 劇情沒跑完不准互動
+    if (!Flow.canInteract) return; 
     if (this.activePrompt === 'ITEM_VINYL') Puzzle.open(1); else if (this.activePrompt === 'ITEM_DREAM') Puzzle.open(2); else if (this.activePrompt === 'ITEM_DANCE') Puzzle.open(3);
   },
   update() {
@@ -168,12 +144,29 @@ const World = {
       this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); 
       this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0;
     }
+    
+    // 如果不是在第三幕(房間)，就畫出李相暮
+    if (Flow.currentAct !== 3) {
+      this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
+    }
     this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame)*4 : 0);
   },
   renderChengXi(x, y, dir, bounce) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
     ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 72, 24, 8, 0, 0, Math.PI * 2); ctx.fill();
     if (Assets.chengxiLoaded) { const drawH = 145; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; ctx.drawImage(Assets.chengxiImg, -drawW / 2, -65, drawW, drawH); } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-10, -30, 20, 50); }
+    ctx.restore();
+  },
+  renderXiangMu(x, y, dir) {
+    const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 74, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
+    if (Assets.xiangmuLoaded) {
+      const drawH = 152; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH;
+      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -70, drawW, drawH);
+    } else {
+      ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15);
+      ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40);
+    }
     ctx.restore();
   },
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
@@ -196,6 +189,7 @@ const Puzzle = {
     } else if (type === 3) {
       document.getElementById('puzzle-title').innerText = "【鏡中獨舞：抓準重心節奏】"; document.getElementById('card-audio').style.display = "none"; document.getElementById('sync-act-btn').style.display = "none";
       document.getElementById('p-touch-btn').style.display = "none"; document.getElementById('touch-ui-area').style.display = "none"; document.getElementById('p-rhythm-btn').style.display = "block";
+      document.getElementById('p-rhythm-btn').innerText = "🎵 跟隨舞步 (抓準光圈重合)"; document.getElementById('p-rhythm-btn').style.background = "var(--memory)";
       this.targetR = 60; this.hitCount = 0;
     }
     this.puzzleLoop(); 
@@ -204,24 +198,53 @@ const Puzzle = {
   startTouch() { if (this.type === 1) this.isTouch = true; }, stopTouch() { if (this.type === 1) this.isTouch = false; },
   onSlider1(v) { this.val1 = parseInt(v); document.getElementById('slider1-val-txt').innerText = this.val1; this.eval(); },
   onSlider2(v) { this.val2 = parseInt(v); document.getElementById('slider2-val-txt').innerText = this.val2; this.eval(); },
+  
+  // 動態更新 SYNC 按鈕文字與成功/失敗提示
   eval() {
     if (this.type === 1) { this.isAReady = (this.val1 >= 20 && this.val2 >= 60 && this.val2 <= 90); }
     else if (this.type === 2) { this.isVReady = (this.val1 > 70 && this.val1 < 85); this.isAReady = (this.val2 > 75 && this.val2 < 90); }
-    document.getElementById('sync-act-btn').className = this.isVReady && this.isAReady ? 'sync-act-btn ready' : 'sync-act-btn';
+    
+    const syncBtn = document.getElementById('sync-act-btn');
+    if (this.type !== 3) {
+      if (this.isVReady && this.isAReady) {
+        syncBtn.className = 'sync-act-btn ready';
+        syncBtn.innerText = "✨ 記憶已完全對齊！點擊同步 ✨";
+      } else {
+        syncBtn.className = 'sync-act-btn';
+        if (!this.isVReady && !this.isAReady) syncBtn.innerText = "⚠️ 畫面與頻率皆未對齊";
+        else if (!this.isVReady) syncBtn.innerText = "⚠️ 畫面尚未聚焦";
+        else if (!this.isAReady) syncBtn.innerText = "⚠️ 聲音頻率未鎖定";
+      }
+    }
   },
+
   hitRhythm() {
+    const btn = document.getElementById('p-rhythm-btn');
     if (this.targetR > 15 && this.targetR < 35) {
       this.hitCount++; this.targetR = 60;
+      btn.innerText = `🎵 完美對齊！(${this.hitCount}/3)`;
+      btn.style.background = "var(--green)";
+      setTimeout(() => { 
+        if (document.getElementById('puzzle-overlay').classList.contains('show')) {
+          btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; 
+        }
+      }, 500);
       if (this.hitCount >= 3) { this.close(); Flow.afterDancePuzzle(); } 
-    } else { this.close(); Flow.afterDancePuzzle(); } 
+    } else { 
+      btn.innerText = "❌ 節奏錯誤！失去平衡！";
+      btn.style.background = "var(--danger)";
+      setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600); // 點錯強制進入跌倒劇情
+    } 
   },
+
   attemptSync() { 
     if (this.isVReady && this.isAReady) { 
       this.close(); 
       if (this.type === 1) { Flow.afterVinylPuzzle(); }
       else if (this.type === 2) { Flow.afterDreamPuzzle(); }
-    } else alert("尚未完全對齊！");
+    }
   },
+
   puzzleLoop() {
     if (!document.getElementById('puzzle-overlay').classList.contains('show')) return;
     this.vCtx.fillStyle = "#05070a"; this.vCtx.fillRect(0, 0, 300, 90);
@@ -230,7 +253,10 @@ const Puzzle = {
       this.overload = this.isTouch ? Math.min(100, this.overload + 0.4) : Math.max(0, this.overload - 0.8); this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
       if (this.overload >= 100) { this.isTouch = false; this.overload = 0; alert("【過載】唱片差點掉落！"); }
       document.getElementById('p-overload-bar').style.width = `${this.overload}%`;
-      this.isVReady = (this.clarity >= 0.85 && this.overload < 90); document.getElementById('sync-act-btn').className = this.isVReady && this.isAReady ? 'sync-act-btn ready' : 'sync-act-btn';
+      
+      this.isVReady = (this.clarity >= 0.85 && this.overload < 90);
+      this.eval(); // 動態更新按鈕文字
+
       this.vCtx.save(); this.vCtx.translate(150, 45); this.recordAngle += this.isTouch ? 0.05 : 0.01; this.vCtx.rotate(this.recordAngle);
       this.vCtx.fillStyle = "#111"; this.vCtx.beginPath(); this.vCtx.arc(0, 0, 40, 0, Math.PI*2); this.vCtx.fill(); this.vCtx.restore();
     } else if (this.type === 2) {
