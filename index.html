@@ -185,7 +185,7 @@ var World = {
     
     // 第二關 (Flow.currentAct === 3) 的鞋子位置預設為 380。你可以自行修改下方數字！
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
-    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
+    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 550) < 80) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 450) < 70) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
     else { this.activePrompt = null; prompt.style.display = 'none'; }
   },
