@@ -34,7 +34,7 @@ const Flow = {
     
     if (act === 2) {
       sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; 
-      World.player.x = 200; World.partner.x = 600; // 相暮在戲院右側
+      World.player.x = 200; World.partner.x = 600; 
       this.startDialogue([
         { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" },
         { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" },
@@ -43,7 +43,7 @@ const Flow = {
 
     } else if (act === 3) {
       sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; 
-      World.player.x = 400; // 相暮不在房間，不會繪製
+      World.player.x = 400; 
       this.startDialogue([
         { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" },
         { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" },
@@ -53,7 +53,7 @@ const Flow = {
 
     } else if (act === 4) {
       sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; 
-      World.player.x = 250; World.partner.x = 550; // 相暮在酒吧右側
+      World.player.x = 250; World.partner.x = 550; 
       this.startDialogue([
         { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" },
         { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" },
@@ -145,10 +145,7 @@ const World = {
       this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0;
     }
     
-    // 如果不是在第三幕(房間)，就畫出李相暮
-    if (Flow.currentAct !== 3) {
-      this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
-    }
+    if (Flow.currentAct !== 3) this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
     this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame)*4 : 0);
   },
   renderChengXi(x, y, dir, bounce) {
@@ -160,13 +157,7 @@ const World = {
   renderXiangMu(x, y, dir) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
     ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 74, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.xiangmuLoaded) {
-      const drawH = 152; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH;
-      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -70, drawW, drawH);
-    } else {
-      ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15);
-      ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40);
-    }
+    if (Assets.xiangmuLoaded) { const drawH = 152; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -70, drawW, drawH); } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15); ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40); }
     ctx.restore();
   },
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
@@ -174,14 +165,22 @@ const World = {
 
 const Puzzle = {
   type: 1, isTouch: false, overload: 0, clarity: 0.1, val1: 0, val2: 0, isVReady: false, isAReady: false, phase: 0, recordAngle: 0, targetR: 60, hitCount: 0,
+  
   open(type) { 
     this.type = type; document.getElementById('puzzle-overlay').classList.add('show');
     this.vC = document.getElementById('vision-canvas'); this.vCtx = this.vC.getContext('2d'); this.vC.width = 300; this.vC.height = 90;
     this.wC = document.getElementById('waveform-canvas'); this.wCtx = this.wC.getContext('2d'); this.wC.width = 300; this.wC.height = 90;
     
+    // 【核心修正】將原本 HTML 中寫死的按鈕覆蓋為 Toggle 機制
+    const touchBtn = document.getElementById('p-touch-btn');
+    touchBtn.onmousedown = null; touchBtn.onmouseup = null; touchBtn.ontouchstart = null; touchBtn.ontouchend = null;
+    touchBtn.onclick = () => this.toggleTouch();
+    this.isTouch = false; this.overload = 0;
+    
     if (type === 1) {
       document.getElementById('puzzle-title').innerText = "【雙軌共感：泛黃的黑膠】"; document.getElementById('card-audio').style.display = "flex";
       document.getElementById('slider-area').style.display = "block"; document.getElementById('p-touch-btn').style.display = "block"; document.getElementById('touch-ui-area').style.display = "block"; document.getElementById('p-rhythm-btn').style.display = "none"; document.getElementById('sync-act-btn').style.display = "block";
+      touchBtn.style.background = "var(--panel-bg)"; touchBtn.style.color = "#fff"; touchBtn.innerText = "🖐 點擊觸摸黑膠 (再次點擊鬆手)";
     } else if (type === 2) {
       document.getElementById('puzzle-title').innerText = "【時間軸：無聲的共感夢境】"; document.getElementById('card-audio').style.display = "flex";
       document.getElementById('slider1-label').innerText = "時間點"; document.getElementById('slider2-label').innerText = "環境音軌";
@@ -194,21 +193,48 @@ const Puzzle = {
     }
     this.puzzleLoop(); 
   },
+  
   close() { document.getElementById('puzzle-overlay').classList.remove('show'); this.isTouch = false; this.overload = 0; },
-  startTouch() { if (this.type === 1) this.isTouch = true; }, stopTouch() { if (this.type === 1) this.isTouch = false; },
+  
+  // 【核心修正】點擊切換觸碰狀態 (Toggle)
+  toggleTouch() {
+    if (this.type !== 1) return;
+    this.isTouch = !this.isTouch;
+    const btn = document.getElementById('p-touch-btn');
+    if (this.isTouch) {
+      btn.style.background = "var(--memory)"; btn.style.color = "#000"; btn.innerText = "🖐 正在觸摸... (注意過載！)";
+    } else {
+      btn.style.background = "var(--panel-bg)"; btn.style.color = "#fff"; btn.innerText = "🖐 點擊觸碰黑膠 (再次點擊鬆手)";
+    }
+  },
+
   onSlider1(v) { this.val1 = parseInt(v); document.getElementById('slider1-val-txt').innerText = this.val1; this.eval(); },
   onSlider2(v) { this.val2 = parseInt(v); document.getElementById('slider2-val-txt').innerText = this.val2; this.eval(); },
   
-  // 動態更新 SYNC 按鈕文字與成功/失敗提示
+  // 【核心修正】動態更新所有文字與顏色提示
   eval() {
-    if (this.type === 1) { this.isAReady = (this.val1 >= 20 && this.val2 >= 60 && this.val2 <= 90); }
-    else if (this.type === 2) { this.isVReady = (this.val1 > 70 && this.val1 < 85); this.isAReady = (this.val2 > 75 && this.val2 < 90); }
+    const vStat = document.getElementById('p-v-status');
+    const aStat = document.getElementById('p-a-status');
     
+    if (this.type === 1) { 
+      this.isAReady = (this.val1 >= 20 && this.val2 >= 60 && this.val2 <= 90); 
+      aStat.innerText = this.isAReady ? "【人聲鎖定】" : "高噪訊...";
+      aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
+    }
+    else if (this.type === 2) { 
+      this.isVReady = (this.val1 > 70 && this.val1 < 85); 
+      this.isAReady = (this.val2 > 75 && this.val2 < 90); 
+      vStat.innerText = this.isVReady ? "【畫面重疊】" : "殘影破碎";
+      vStat.style.color = this.isVReady ? "var(--memory)" : "#8b949e";
+      aStat.innerText = this.isAReady ? "【音軌咬合】" : "頻率錯位";
+      aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
+    }
+    
+    // 即時更新 SYNC 按鈕的回饋
     const syncBtn = document.getElementById('sync-act-btn');
     if (this.type !== 3) {
       if (this.isVReady && this.isAReady) {
-        syncBtn.className = 'sync-act-btn ready';
-        syncBtn.innerText = "✨ 記憶已完全對齊！點擊同步 ✨";
+        syncBtn.className = 'sync-act-btn ready'; syncBtn.innerText = "✨ 記憶已完全對齊！點擊同步 ✨";
       } else {
         syncBtn.className = 'sync-act-btn';
         if (!this.isVReady && !this.isAReady) syncBtn.innerText = "⚠️ 畫面與頻率皆未對齊";
@@ -233,7 +259,7 @@ const Puzzle = {
     } else { 
       btn.innerText = "❌ 節奏錯誤！失去平衡！";
       btn.style.background = "var(--danger)";
-      setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600); // 點錯強制進入跌倒劇情
+      setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600); 
     } 
   },
 
@@ -250,12 +276,26 @@ const Puzzle = {
     this.vCtx.fillStyle = "#05070a"; this.vCtx.fillRect(0, 0, 300, 90);
     
     if (this.type === 1) {
-      this.overload = this.isTouch ? Math.min(100, this.overload + 0.4) : Math.max(0, this.overload - 0.8); this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
-      if (this.overload >= 100) { this.isTouch = false; this.overload = 0; alert("【過載】唱片差點掉落！"); }
+      this.overload = this.isTouch ? Math.min(100, this.overload + 0.3) : Math.max(0, this.overload - 0.8); 
+      this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
+      
+      if (this.overload >= 100) { 
+        this.toggleTouch(); // 強制鬆手
+        this.overload = 0; this.clarity = 0.1; 
+        alert("【過載】程曦手一抖，唱片差點掉落！"); 
+      }
       document.getElementById('p-overload-bar').style.width = `${this.overload}%`;
       
       this.isVReady = (this.clarity >= 0.85 && this.overload < 90);
-      this.eval(); // 動態更新按鈕文字
+      
+      // 【核心修正】動態更新程曦視覺狀態
+      const vStat = document.getElementById('p-v-status');
+      if (this.isVReady) {
+        vStat.innerText = "【殘影清晰】"; vStat.style.color = "var(--memory)";
+      } else {
+        vStat.innerText = this.isTouch ? "聚焦中..." : "未觸摸"; vStat.style.color = "#8b949e";
+      }
+      this.eval(); // 呼叫 eval 更新按鈕
 
       this.vCtx.save(); this.vCtx.translate(150, 45); this.recordAngle += this.isTouch ? 0.05 : 0.01; this.vCtx.rotate(this.recordAngle);
       this.vCtx.fillStyle = "#111"; this.vCtx.beginPath(); this.vCtx.arc(0, 0, 40, 0, Math.PI*2); this.vCtx.fill(); this.vCtx.restore();
