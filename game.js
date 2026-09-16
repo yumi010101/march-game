@@ -5,46 +5,124 @@ const Assets = {
 
 const Flow = {
   currentAct: 2,
+  canInteract: false, // 控制是否可以觸發解謎
+  dialogueQueue: [],
+  onDialogueEnd: null,
+
   startGame() { document.getElementById('start-screen').style.display = 'none'; },
   endGame() { document.getElementById('end-screen').style.display = 'flex'; },
+  
+  // --- 視覺小說對話系統 ---
+  startDialogue(queue, callback) {
+    this.dialogueQueue = [...queue];
+    this.onDialogueEnd = callback;
+    this.nextDialogue();
+  },
+  nextDialogue() {
+    const dTag = document.getElementById('speaker-tag'); 
+    const dText = document.getElementById('dialogue-text');
+    const dActions = document.getElementById('dialogue-actions');
+    
+    if (this.dialogueQueue.length === 0) {
+      if (this.onDialogueEnd) this.onDialogueEnd();
+      else dActions.innerHTML = ""; // 預設清空按鈕
+      return;
+    }
+    
+    let current = this.dialogueQueue.shift();
+    dTag.innerText = current.n;
+    dText.innerText = current.t;
+    dActions.innerHTML = `<button class="action-btn-sm" onclick="Flow.nextDialogue()">繼續 ➔</button>`;
+  },
+
   setAct(act) {
     this.currentAct = act;
+    this.canInteract = false; // 劇情沒跑完前不能互動
     const sub = document.getElementById('chapter-sub'); const badge = document.getElementById('chapter-badge');
-    const dTag = document.getElementById('speaker-tag'); const dText = document.getElementById('dialogue-text');
     document.getElementById('dialogue-actions').innerHTML = "";
     
     if (act === 2) {
       sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 200;
-      dTag.innerText = "戲院老闆"; dText.innerText = "「這幾張黑膠是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」";
+      this.startDialogue([
+        { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" },
+        { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" },
+        { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" }
+      ], () => {
+        document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到桌子旁按下 [E] 觸碰黑膠)</span>`;
+        this.canInteract = true;
+      });
+
     } else if (act === 3) {
       sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 400;
-      dTag.innerText = "系統"; dText.innerText = "夜裡安靜，窗簾隨風微動，月光落在程曦的臉上。地板上靜靜擺著一雙舊皮鞋……";
+      this.startDialogue([
+        { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" },
+        { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" },
+        { n: "程曦", t: "「海邊……」" },
+        { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" }
+      ], () => {
+        document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到舊皮鞋旁按下 [E] 進入夢境)</span>`;
+        this.canInteract = true;
+      });
+
     } else if (act === 4) {
       sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 250;
-      dTag.innerText = "陳導"; dText.innerText = "「這裡，我打算作為那場舞會的取景地。」\n（程曦望著地上的痕跡與一面破碎的鏡子……）";
+      this.startDialogue([
+        { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" },
+        { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" },
+        { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" }
+      ], () => {
+        document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到破碎的鏡子前按下 [E] 凝視)</span>`;
+        this.canInteract = true;
+      });
     }
   },
-  takeVideoRecorder() {
-    document.getElementById('speaker-tag').innerText = "系統 / 程曦"; document.getElementById('dialogue-text').innerText = "程曦迅速後退半步，深呼吸，連忙從口袋掏出手套戴上。接過了老闆手中的舊錄影機。";
-    document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" onclick="Flow.showModal('【觸發回憶夢境】', '錄影機裡傳來輕快的圓舞曲，與戲院老闆母親的對話。\\n程曦帶著這疊黑膠與錄影機回到房間。夜深人靜，疲憊的她沉沉睡去……')">進入房間 ➔</button>`;
+
+  // 解謎破關後的劇情觸發
+  afterVinylPuzzle() {
+    this.startDialogue([
+      { n: "系統", t: "一個穿著舞鞋的女孩身處昏黃燈光下的舞池，一邊跳舞，一邊哭泣，彷彿在低聲懇求：「不要走……求你……」" },
+      { n: "系統", t: "程曦猛地回神，手開始顫抖，唱片不穩，輕輕一滑，啪嗒落地。" },
+      { n: "系統", t: "她驚了一下，迅速後退半步，深吸一口氣，連忙從口袋裡掏出手套戴上。神情變得疏離。" },
+      { n: "戲院老闆", t: "「還好吧？這唱片有點年紀了，要小心些。」" },
+      { n: "程曦", t: "「……對不起。」" },
+      { n: "戲院老闆", t: "「沒事。對了，這是我偶然間找到的錄影機，看來是我叔叔和我媽媽在練習跳舞，不知道對你們有沒有幫助。」" },
+      { n: "系統", t: "錄影機裡傳來輕快的圓舞曲。程曦小心撿起唱片，接過錄影機，決定回房間仔細梳理。" }
+    ], () => {
+      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(3)">進入下一幕 ➔</button>`;
+    });
   },
-  wakeUpFromDream() {
-    document.getElementById('speaker-tag').innerText = "程曦"; document.getElementById('dialogue-text').innerText = "程曦猛地睜眼，一滴眼淚從眼角滴落。她伸手輕觸地上的舊皮鞋：「海邊。」";
-    document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" onclick="Flow.showModal('【前往勘景】', '兩人循著記憶的線索，與劇組一同來到了下一個勘景地點：廢棄的音樂酒吧。')">前往廢棄酒吧 ➔</button>`;
+
+  afterDreamPuzzle() {
+    this.startDialogue([
+      { n: "系統", t: "夢境裡，兩人牽手在小巷裡走，安靜地躲避軍人巡邏……畫面漸暗。最後定格在男孩靠近女孩的耳邊，清晰地說了一句：「我愛妳」。" },
+      { n: "系統", t: "程曦猛地睜眼，一滴眼淚從眼角滴落。她怔怔看向窗外亮起的天空。" },
+      { n: "程曦", t: "「海邊……」" },
+      { n: "系統", t: "她急忙披上外套，衝出房門，去敲李相暮的門。" },
+      { n: "李相暮", t: "「早上七點妳在幹嘛？」" },
+      { n: "程曦", t: "「海邊、皮鞋、戲院、港口、軍人……」" },
+      { n: "系統", t: "兩人比對了彼此的殘留記憶與樂譜，發現兩段命運開始重疊。隨後，他們跟著劇組來到了下一個勘景地。" }
+    ], () => {
+      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(4)">前往廢棄酒吧 ➔</button>`;
+    });
   },
-  fallDown() {
-    document.getElementById('speaker-tag').innerText = "系統"; document.getElementById('dialogue-text').innerText = "程曦下意識模仿鏡中女孩的動作，旋轉、跨步、單腳重心前傾，卻不幸失去平衡，整個人向後倒去！";
-    document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--danger); font-size:1.2rem; padding:16px;" onclick="Flow.catchHer()">[E] 李相暮接住她！</button>`;
+
+  afterDancePuzzle() {
+    this.startDialogue([
+      { n: "系統", t: "程曦下意識模仿鏡中李婉玉的動作，旋轉、跨步、單腳重心前傾……" },
+      { n: "系統", t: "卻不幸失去平衡，整個人向後倒去！" }
+    ], () => {
+      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--danger); font-size:1.2rem; padding:16px;" onclick="Flow.catchHer()">[E] 李相暮接住她！</button>`;
+    });
   },
+
   catchHer() {
-    Flow.showModal('【心跳失衡】', '李相暮眼疾手快，一把接住她。\n兩人相視，呼吸交錯。空氣一陣靜默。');
-  },
-  showModal(title, desc) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-desc').innerText = desc; document.getElementById('story-modal').classList.add('show'); },
-  onModalConfirm() { 
-    document.getElementById('story-modal').classList.remove('show');
-    if (this.currentAct === 2) this.setAct(3); 
-    else if (this.currentAct === 3) this.setAct(4);
-    else if (this.currentAct === 4) { this.endGame(); }
+    this.startDialogue([
+      { n: "系統", t: "李相暮眼疾手快，一把接住她。" },
+      { n: "系統", t: "兩人相視，呼吸交錯。" },
+      { n: "系統", t: "空氣一陣靜默。" }
+    ], () => {
+      document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--memory); color:#000; font-weight:bold;" onclick="Flow.endGame()">查看結尾</button>`;
+    });
   }
 };
 
@@ -61,6 +139,7 @@ const World = {
   },
   setupTouch(id, key) { const el = document.getElementById(id); el.addEventListener('touchstart', e => { e.preventDefault(); this.keys[key] = true; }); el.addEventListener('touchend', e => { e.preventDefault(); this.keys[key] = false; }); },
   handleInteract() {
+    if (!Flow.canInteract) return; // 劇情沒跑完不准互動
     if (this.activePrompt === 'ITEM_VINYL') Puzzle.open(1); else if (this.activePrompt === 'ITEM_DREAM') Puzzle.open(2); else if (this.activePrompt === 'ITEM_DANCE') Puzzle.open(3);
   },
   update() {
@@ -70,8 +149,10 @@ const World = {
     this.player.x = Math.max(60, Math.min(740, this.player.x)); this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
     
     const prompt = document.getElementById('interact-prompt');
-    if (Flow.currentAct === 2 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸摸黑膠唱片"; }
-    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸摸舊皮鞋"; }
+    if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
+
+    if (Flow.currentAct === 2 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
+    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 450) < 70) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
     else { this.activePrompt = null; prompt.style.display = 'none'; }
   },
@@ -131,14 +212,14 @@ const Puzzle = {
   hitRhythm() {
     if (this.targetR > 15 && this.targetR < 35) {
       this.hitCount++; this.targetR = 60;
-      if (this.hitCount >= 3) { this.close(); Flow.fallDown(); } 
-    } else { this.close(); Flow.fallDown(); } 
+      if (this.hitCount >= 3) { this.close(); Flow.afterDancePuzzle(); } 
+    } else { this.close(); Flow.afterDancePuzzle(); } 
   },
   attemptSync() { 
     if (this.isVReady && this.isAReady) { 
       this.close(); 
-      if (this.type === 1) { Flow.showModal('【感官過載】', '一個女孩身處昏黃舞池，哭泣低語：「不要走……求你……」\n程曦猛地回神，手發抖，唱片啪嗒落地。'); setTimeout(()=>Flow.takeVideoRecorder(), 500); }
-      else if (this.type === 2) { Flow.showModal('【男孩視角】', '他靠近女孩耳邊，清晰地說了一句：\n「我愛妳」'); setTimeout(()=>Flow.wakeUpFromDream(), 500); }
+      if (this.type === 1) { Flow.afterVinylPuzzle(); }
+      else if (this.type === 2) { Flow.afterDreamPuzzle(); }
     } else alert("尚未完全對齊！");
   },
   puzzleLoop() {
