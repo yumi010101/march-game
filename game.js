@@ -88,8 +88,8 @@ const Flow = {
 
   afterDancePuzzle() {
     this.startDialogue([
-      { n: "系統", t: "程曦下意識模仿鏡中李婉玉的動作，旋轉、跨步、單腳重心前傾……" },
-      { n: "系統", t: "卻不幸失去平衡，整個人向後倒去！" }
+      { n: "系統", t: "程曦跟著鏡中殘影的節奏，順利完成了「旋轉」與「跨步」……" },
+      { n: "系統", t: "但在進行到第三步「單腳重心前傾」時，卻不幸失去平衡，整個人向後倒去！" }
     ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--danger); font-size:1.2rem; padding:16px;" onclick="Flow.catchHer()">[E] 李相暮接住她！</button>`; });
   },
 
@@ -171,11 +171,20 @@ const Puzzle = {
     this.vC = document.getElementById('vision-canvas'); this.vCtx = this.vC.getContext('2d'); this.vC.width = 300; this.vC.height = 90;
     this.wC = document.getElementById('waveform-canvas'); this.wCtx = this.wC.getContext('2d'); this.wC.width = 300; this.wC.height = 90;
     
-    // 【核心修正】將原本 HTML 中寫死的按鈕覆蓋為 Toggle 機制
+    // 【修復 1】強制重置所有數據，避免直接通關
+    this.isTouch = false; this.overload = 0; this.clarity = 0.1;
+    this.val1 = 0; this.val2 = 0; this.hitCount = 0; this.targetR = 60;
+    this.isVReady = false; this.isAReady = false;
+    
+    // 強制 UI 滑桿歸零
+    const s1 = document.getElementById('slider1'); if (s1) s1.value = 0;
+    const s2 = document.getElementById('slider2'); if (s2) s2.value = 0;
+    document.getElementById('slider1-val-txt').innerText = "0";
+    document.getElementById('slider2-val-txt').innerText = "0";
+
     const touchBtn = document.getElementById('p-touch-btn');
     touchBtn.onmousedown = null; touchBtn.onmouseup = null; touchBtn.ontouchstart = null; touchBtn.ontouchend = null;
     touchBtn.onclick = () => this.toggleTouch();
-    this.isTouch = false; this.overload = 0;
     
     if (type === 1) {
       document.getElementById('puzzle-title').innerText = "【雙軌共感：泛黃的黑膠】"; document.getElementById('card-audio').style.display = "flex";
@@ -189,48 +198,39 @@ const Puzzle = {
       document.getElementById('puzzle-title').innerText = "【鏡中獨舞：抓準重心節奏】"; document.getElementById('card-audio').style.display = "none"; document.getElementById('sync-act-btn').style.display = "none";
       document.getElementById('p-touch-btn').style.display = "none"; document.getElementById('touch-ui-area').style.display = "none"; document.getElementById('p-rhythm-btn').style.display = "block";
       document.getElementById('p-rhythm-btn').innerText = "🎵 跟隨舞步 (抓準光圈重合)"; document.getElementById('p-rhythm-btn').style.background = "var(--memory)";
-      this.targetR = 60; this.hitCount = 0;
     }
+    
+    this.eval(); // 強制刷新按鈕狀態
     this.puzzleLoop(); 
   },
   
   close() { document.getElementById('puzzle-overlay').classList.remove('show'); this.isTouch = false; this.overload = 0; },
   
-  // 【核心修正】點擊切換觸碰狀態 (Toggle)
   toggleTouch() {
     if (this.type !== 1) return;
     this.isTouch = !this.isTouch;
     const btn = document.getElementById('p-touch-btn');
-    if (this.isTouch) {
-      btn.style.background = "var(--memory)"; btn.style.color = "#000"; btn.innerText = "🖐 正在觸摸... (注意過載！)";
-    } else {
-      btn.style.background = "var(--panel-bg)"; btn.style.color = "#fff"; btn.innerText = "🖐 點擊觸碰黑膠 (再次點擊鬆手)";
-    }
+    if (this.isTouch) { btn.style.background = "var(--memory)"; btn.style.color = "#000"; btn.innerText = "🖐 正在觸摸... (注意過載！)"; } 
+    else { btn.style.background = "var(--panel-bg)"; btn.style.color = "#fff"; btn.innerText = "🖐 點擊觸碰黑膠 (再次點擊鬆手)"; }
   },
 
   onSlider1(v) { this.val1 = parseInt(v); document.getElementById('slider1-val-txt').innerText = this.val1; this.eval(); },
   onSlider2(v) { this.val2 = parseInt(v); document.getElementById('slider2-val-txt').innerText = this.val2; this.eval(); },
   
-  // 【核心修正】動態更新所有文字與顏色提示
   eval() {
-    const vStat = document.getElementById('p-v-status');
-    const aStat = document.getElementById('p-a-status');
+    const vStat = document.getElementById('p-v-status'); const aStat = document.getElementById('p-a-status');
     
     if (this.type === 1) { 
       this.isAReady = (this.val1 >= 20 && this.val2 >= 60 && this.val2 <= 90); 
-      aStat.innerText = this.isAReady ? "【人聲鎖定】" : "高噪訊...";
-      aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
+      aStat.innerText = this.isAReady ? "【人聲鎖定】" : "高噪訊..."; aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
     }
     else if (this.type === 2) { 
       this.isVReady = (this.val1 > 70 && this.val1 < 85); 
       this.isAReady = (this.val2 > 75 && this.val2 < 90); 
-      vStat.innerText = this.isVReady ? "【畫面重疊】" : "殘影破碎";
-      vStat.style.color = this.isVReady ? "var(--memory)" : "#8b949e";
-      aStat.innerText = this.isAReady ? "【音軌咬合】" : "頻率錯位";
-      aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
+      vStat.innerText = this.isVReady ? "【畫面重疊】" : "殘影破碎"; vStat.style.color = this.isVReady ? "var(--memory)" : "#8b949e";
+      aStat.innerText = this.isAReady ? "【音軌咬合】" : "頻率錯位"; aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
     }
     
-    // 即時更新 SYNC 按鈕的回饋
     const syncBtn = document.getElementById('sync-act-btn');
     if (this.type !== 3) {
       if (this.isVReady && this.isAReady) {
@@ -244,22 +244,37 @@ const Puzzle = {
     }
   },
 
+  // 【修復 2】真實節奏挑戰！點錯會懲罰歸零
   hitRhythm() {
     const btn = document.getElementById('p-rhythm-btn');
+    // 如果光圈進入正確範圍 (15 ~ 35)
     if (this.targetR > 15 && this.targetR < 35) {
-      this.hitCount++; this.targetR = 60;
-      btn.innerText = `🎵 完美對齊！(${this.hitCount}/3)`;
-      btn.style.background = "var(--green)";
+      this.hitCount++; 
+      this.targetR = 60; // 成功，光圈重置開始下一波
+      
+      // 第三步成功：強制觸發跌倒劇情
+      if (this.hitCount === 3) { 
+        btn.innerText = `⚠️ 失去平衡！`; btn.style.background = "var(--danger)";
+        setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600);
+      } else {
+        // 第一、第二步成功：繼續挑戰
+        btn.innerText = `🎵 完美對齊！(${this.hitCount}/3)`; btn.style.background = "var(--green)";
+        setTimeout(() => { 
+          if (document.getElementById('puzzle-overlay').classList.contains('show')) {
+            btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; 
+          }
+        }, 500);
+      }
+    } else { 
+      // 點錯了：連擊歸零懲罰
+      this.hitCount = 0;
+      this.targetR = 60;
+      btn.innerText = "❌ 節奏錯誤，重新抓拍！"; btn.style.background = "var(--danger)";
       setTimeout(() => { 
         if (document.getElementById('puzzle-overlay').classList.contains('show')) {
           btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; 
         }
-      }, 500);
-      if (this.hitCount >= 3) { this.close(); Flow.afterDancePuzzle(); } 
-    } else { 
-      btn.innerText = "❌ 節奏錯誤！失去平衡！";
-      btn.style.background = "var(--danger)";
-      setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600); 
+      }, 600); 
     } 
   },
 
@@ -280,22 +295,16 @@ const Puzzle = {
       this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
       
       if (this.overload >= 100) { 
-        this.toggleTouch(); // 強制鬆手
-        this.overload = 0; this.clarity = 0.1; 
+        this.toggleTouch(); this.overload = 0; this.clarity = 0.1; 
         alert("【過載】程曦手一抖，唱片差點掉落！"); 
       }
       document.getElementById('p-overload-bar').style.width = `${this.overload}%`;
       
       this.isVReady = (this.clarity >= 0.85 && this.overload < 90);
-      
-      // 【核心修正】動態更新程曦視覺狀態
       const vStat = document.getElementById('p-v-status');
-      if (this.isVReady) {
-        vStat.innerText = "【殘影清晰】"; vStat.style.color = "var(--memory)";
-      } else {
-        vStat.innerText = this.isTouch ? "聚焦中..." : "未觸摸"; vStat.style.color = "#8b949e";
-      }
-      this.eval(); // 呼叫 eval 更新按鈕
+      if (this.isVReady) { vStat.innerText = "【殘影清晰】"; vStat.style.color = "var(--memory)"; } 
+      else { vStat.innerText = this.isTouch ? "聚焦中..." : "未觸摸"; vStat.style.color = "#8b949e"; }
+      this.eval();
 
       this.vCtx.save(); this.vCtx.translate(150, 45); this.recordAngle += this.isTouch ? 0.05 : 0.01; this.vCtx.rotate(this.recordAngle);
       this.vCtx.fillStyle = "#111"; this.vCtx.beginPath(); this.vCtx.arc(0, 0, 40, 0, Math.PI*2); this.vCtx.fill(); this.vCtx.restore();
