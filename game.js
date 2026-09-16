@@ -1,6 +1,7 @@
-const Assets = {
-  chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(),
-  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false, roomBgLoaded: false,
+// 為了確保按鈕能百分之百抓到指令，這裡使用 var 來宣告
+var Assets = {
+  chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(), barBg: new Image(),
+  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false, roomBgLoaded: false, barBgLoaded: false,
   init() { 
     this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
     this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
@@ -9,14 +10,8 @@ const Assets = {
     this.barBg.src = 'bar-bg.png'; this.barBg.onload = () => this.barBgLoaded = true;
   }
 };
-  init() { 
-    this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
-    this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
-    this.xiangmuImg.src = 'xiangmu.png'; this.xiangmuImg.onload = () => this.xiangmuLoaded = true;
-  }
-};
 
-const Flow = {
+var Flow = {
   currentAct: 2, canInteract: false, dialogueQueue: [], onDialogueEnd: null,
 
   startGame() { document.getElementById('start-screen').style.display = 'none'; },
@@ -110,7 +105,7 @@ const Flow = {
   }
 };
 
-const World = {
+var World = {
   canvas: null, ctx: null, keys: {}, player: { x: 200, y: 190, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, partner: { x: 600, y: 190, dir: -1 }, activePrompt: null,
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
@@ -142,21 +137,19 @@ const World = {
   },
   draw() {
     this.ctx.clearRect(0, 0, 800, 320);
+    
+    // 繪製對應場景的背景
     if (Flow.currentAct === 2) {
-      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, 800, 320); else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#121722"; this.ctx.fillRect(0, 210, 800, 110); }
+      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, 800, 320); 
+      else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#121722"; this.ctx.fillRect(0, 210, 800, 110); }
       this.ctx.fillStyle = "#2d241c"; this.ctx.fillRect(340, 190, 80, 40); this.ctx.fillStyle = "#111"; this.ctx.beginPath(); this.ctx.ellipse(380, 185, 20, 8, 0, 0, Math.PI*2); this.ctx.fill();
     } else if (Flow.currentAct === 3) {
-      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, 800, 320); 
-      else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, 800, 320); }
+      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, 800, 320);
+      else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#11151f"; this.ctx.fillRect(0, 210, 800, 110); this.ctx.fillStyle = "#1c2130"; this.ctx.fillRect(300, 80, 160, 130); this.ctx.fillStyle = "#3e2723"; this.ctx.fillRect(360, 200, 40, 15); }
     } else if (Flow.currentAct === 4) {
-      if (Assets.barBgLoaded) {
-        this.ctx.drawImage(Assets.barBg, 0, 0, 800, 320);
-      } else {
-        // 如果圖片還沒載入，就先畫原本的色塊墊底
-        this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); 
-        this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); 
-        this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0;
-      }
+      if (Assets.barBgLoaded) this.ctx.drawImage(Assets.barBg, 0, 0, 800, 320);
+      else { this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0; }
+    }
     
     if (Flow.currentAct !== 3) this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
     this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame)*4 : 0);
@@ -176,7 +169,7 @@ const World = {
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
 };
 
-const Puzzle = {
+var Puzzle = {
   type: 1, isTouch: false, overload: 0, clarity: 0.1, val1: 0, val2: 0, isVReady: false, isAReady: false, phase: 0, recordAngle: 0, targetR: 60, hitCount: 0,
   
   open(type) { 
@@ -184,16 +177,13 @@ const Puzzle = {
     this.vC = document.getElementById('vision-canvas'); this.vCtx = this.vC.getContext('2d'); this.vC.width = 300; this.vC.height = 90;
     this.wC = document.getElementById('waveform-canvas'); this.wCtx = this.wC.getContext('2d'); this.wC.width = 300; this.wC.height = 90;
     
-    // 【修復 1】強制重置所有數據，避免直接通關
     this.isTouch = false; this.overload = 0; this.clarity = 0.1;
     this.val1 = 0; this.val2 = 0; this.hitCount = 0; this.targetR = 60;
     this.isVReady = false; this.isAReady = false;
     
-    // 強制 UI 滑桿歸零
     const s1 = document.getElementById('slider1'); if (s1) s1.value = 0;
     const s2 = document.getElementById('slider2'); if (s2) s2.value = 0;
-    document.getElementById('slider1-val-txt').innerText = "0";
-    document.getElementById('slider2-val-txt').innerText = "0";
+    document.getElementById('slider1-val-txt').innerText = "0"; document.getElementById('slider2-val-txt').innerText = "0";
 
     const touchBtn = document.getElementById('p-touch-btn');
     touchBtn.onmousedown = null; touchBtn.onmouseup = null; touchBtn.ontouchstart = null; touchBtn.ontouchend = null;
@@ -213,7 +203,7 @@ const Puzzle = {
       document.getElementById('p-rhythm-btn').innerText = "🎵 跟隨舞步 (抓準光圈重合)"; document.getElementById('p-rhythm-btn').style.background = "var(--memory)";
     }
     
-    this.eval(); // 強制刷新按鈕狀態
+    this.eval(); 
     this.puzzleLoop(); 
   },
   
@@ -232,7 +222,6 @@ const Puzzle = {
   
   eval() {
     const vStat = document.getElementById('p-v-status'); const aStat = document.getElementById('p-a-status');
-    
     if (this.type === 1) { 
       this.isAReady = (this.val1 >= 20 && this.val2 >= 60 && this.val2 <= 90); 
       aStat.innerText = this.isAReady ? "【人聲鎖定】" : "高噪訊..."; aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
@@ -243,12 +232,10 @@ const Puzzle = {
       vStat.innerText = this.isVReady ? "【畫面重疊】" : "殘影破碎"; vStat.style.color = this.isVReady ? "var(--memory)" : "#8b949e";
       aStat.innerText = this.isAReady ? "【音軌咬合】" : "頻率錯位"; aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)";
     }
-    
     const syncBtn = document.getElementById('sync-act-btn');
     if (this.type !== 3) {
-      if (this.isVReady && this.isAReady) {
-        syncBtn.className = 'sync-act-btn ready'; syncBtn.innerText = "✨ 記憶已完全對齊！點擊同步 ✨";
-      } else {
+      if (this.isVReady && this.isAReady) { syncBtn.className = 'sync-act-btn ready'; syncBtn.innerText = "✨ 記憶已完全對齊！點擊同步 ✨"; } 
+      else {
         syncBtn.className = 'sync-act-btn';
         if (!this.isVReady && !this.isAReady) syncBtn.innerText = "⚠️ 畫面與頻率皆未對齊";
         else if (!this.isVReady) syncBtn.innerText = "⚠️ 畫面尚未聚焦";
@@ -257,46 +244,26 @@ const Puzzle = {
     }
   },
 
-  // 【修復 2】真實節奏挑戰！點錯會懲罰歸零
   hitRhythm() {
     const btn = document.getElementById('p-rhythm-btn');
-    // 如果光圈進入正確範圍 (15 ~ 35)
     if (this.targetR > 15 && this.targetR < 35) {
-      this.hitCount++; 
-      this.targetR = 60; // 成功，光圈重置開始下一波
-      
-      // 第三步成功：強制觸發跌倒劇情
+      this.hitCount++; this.targetR = 60;
       if (this.hitCount === 3) { 
         btn.innerText = `⚠️ 失去平衡！`; btn.style.background = "var(--danger)";
         setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600);
       } else {
-        // 第一、第二步成功：繼續挑戰
         btn.innerText = `🎵 完美對齊！(${this.hitCount}/3)`; btn.style.background = "var(--green)";
-        setTimeout(() => { 
-          if (document.getElementById('puzzle-overlay').classList.contains('show')) {
-            btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; 
-          }
-        }, 500);
+        setTimeout(() => { if (document.getElementById('puzzle-overlay').classList.contains('show')) { btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; } }, 500);
       }
     } else { 
-      // 點錯了：連擊歸零懲罰
-      this.hitCount = 0;
-      this.targetR = 60;
+      this.hitCount = 0; this.targetR = 60;
       btn.innerText = "❌ 節奏錯誤，重新抓拍！"; btn.style.background = "var(--danger)";
-      setTimeout(() => { 
-        if (document.getElementById('puzzle-overlay').classList.contains('show')) {
-          btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; 
-        }
-      }, 600); 
+      setTimeout(() => { if (document.getElementById('puzzle-overlay').classList.contains('show')) { btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; } }, 600); 
     } 
   },
 
   attemptSync() { 
-    if (this.isVReady && this.isAReady) { 
-      this.close(); 
-      if (this.type === 1) { Flow.afterVinylPuzzle(); }
-      else if (this.type === 2) { Flow.afterDreamPuzzle(); }
-    }
+    if (this.isVReady && this.isAReady) { this.close(); if (this.type === 1) { Flow.afterVinylPuzzle(); } else if (this.type === 2) { Flow.afterDreamPuzzle(); } }
   },
 
   puzzleLoop() {
@@ -307,10 +274,7 @@ const Puzzle = {
       this.overload = this.isTouch ? Math.min(100, this.overload + 0.3) : Math.max(0, this.overload - 0.8); 
       this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
       
-      if (this.overload >= 100) { 
-        this.toggleTouch(); this.overload = 0; this.clarity = 0.1; 
-        alert("【過載】程曦手一抖，唱片差點掉落！"); 
-      }
+      if (this.overload >= 100) { this.toggleTouch(); this.overload = 0; this.clarity = 0.1; alert("【過載】程曦手一抖，唱片差點掉落！"); }
       document.getElementById('p-overload-bar').style.width = `${this.overload}%`;
       
       this.isVReady = (this.clarity >= 0.85 && this.overload < 90);
@@ -340,4 +304,5 @@ const Puzzle = {
     requestAnimationFrame(() => this.puzzleLoop());
   }
 };
+
 window.onload = () => World.init();
