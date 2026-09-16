@@ -6,6 +6,7 @@ const Assets = {
     this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
     this.xiangmuImg.src = 'xiangmu.png'; this.xiangmuImg.onload = () => this.xiangmuLoaded = true;
     this.roomBg.src = 'room-bg.png'; this.roomBg.onload = () => this.roomBgLoaded = true;
+    this.barBg.src = 'bar-bg.png'; this.barBg.onload = () => this.barBgLoaded = true;
   }
 };
   init() { 
@@ -148,9 +149,14 @@ const World = {
       if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, 800, 320); 
       else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, 800, 320); }
     } else if (Flow.currentAct === 4) {
-      this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); 
-      this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0;
-    }
+      if (Assets.barBgLoaded) {
+        this.ctx.drawImage(Assets.barBg, 0, 0, 800, 320);
+      } else {
+        // 如果圖片還沒載入，就先畫原本的色塊墊底
+        this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); 
+        this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); 
+        this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0;
+      }
     
     if (Flow.currentAct !== 3) this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
     this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame)*4 : 0);
