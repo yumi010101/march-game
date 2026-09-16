@@ -4,20 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>誰在三月失了神 - 完整三幕劇</title>
-<!-- 引入外部 CSS 樣式表 -->
-<link rel="stylesheet" href="style.css">
+<style>
+  :root { --bg-dark: #07090e; --panel-bg: #11151f; --border: #232a3d; --text: #ffffff; --accent: #58a6ff; --memory: #e5b544; --danger: #f85149; --green: #3fb950; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  body { background: var(--bg-dark); color: var(--text); font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh; padding: 0; }
+  #game-wrapper { width: 100%; max-width: 800px; height: 100vh; background: var(--panel-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.9rem;}
+  .badge { color: var(--memory); border: 1px solid var(--memory); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
+  #stage-wrap { width: 100%; aspect-ratio: 800 / 320; background: #020305; position: relative; flex-shrink: 0; }
+  canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  #interact-prompt { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 10; }
+  #mobile-controls { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #0b0e14; border-bottom: 1px solid var(--border); }
+  .d-pad { display: flex; gap: 16px; }
+  .touch-btn, .interact-btn { height: 55px; background: #1f2633; border: 1px solid var(--border); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+  .touch-btn { width: 70px; font-size: 1.5rem; } .interact-btn { width: 120px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; }
+  .touch-btn:active { background: var(--accent); } .interact-btn:active { background: var(--memory); color: #000; }
+  #dialogue-area { background: #090c12; padding: 16px 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); } .dialogue-body { font-size: 1.05rem; line-height: 1.6; color: #e6edf3; }
+  .action-btn-sm { padding: 12px 16px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; margin-top: 8px; cursor: pointer; display: inline-block; }
+  #puzzle-overlay, #story-modal { position: absolute; inset: 0; z-index: 50; display: none; background: rgba(7,9,14,0.98); padding: 20px; overflow-y: auto; flex-direction: column; }
+  #puzzle-overlay.show, #story-modal.show { display: flex; }
+  .p-card { background: #0b0e14; border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .p-btn { padding: 12px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+  .sync-act-btn { padding: 16px; background: #21262d; border: 1px solid var(--border); color: #c9d1d9; border-radius: 6px; font-size: 1.1rem; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+  .sync-act-btn.ready { background: var(--green); color: #fff; box-shadow: 0 0 15px rgba(63,185,80,0.4); }
+  #story-modal { justify-content: center; align-items: center; text-align: center; } #story-modal h2 { color: var(--memory); margin-bottom: 16px; font-size: 1.4rem; } #story-modal p { line-height: 1.8; color: #e6edf3; margin-bottom: 24px; font-size: 1.05rem; white-space: pre-line; }
+  #start-screen, #end-screen { position: absolute; inset: 0; z-index: 100; background: #040609; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  #end-screen { display: none; }
+  .main-title { font-size: 2.2rem; font-weight: bold; color: var(--memory); margin-bottom: 12px; letter-spacing: 4px; }
+  .sub-title { font-size: 1rem; color: #8b949e; margin-bottom: 40px; letter-spacing: 2px; }
+  .start-game-btn { padding: 16px 40px; font-size: 1.2rem; font-weight: bold; background: var(--accent); color: #fff; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(88,166,255,0.3); transition: 0.2s; }
+  .start-game-btn:active { transform: scale(0.95); background: #3b8eed; }
+  @media (min-width: 800px) { body { align-items: center; } #game-wrapper { height: 90vh; max-height: 700px; border: 1px solid var(--border); border-radius: 12px; } }
+</style>
 </head>
 <body>
 <div id="game-wrapper">
   
-  <!-- 開頭畫面 -->
   <div id="start-screen">
     <div class="main-title">誰在三月失了神</div>
     <div class="sub-title">雙軌共感 敘事體驗</div>
     <button class="start-game-btn" onclick="Flow.startGame()">開始遊戲</button>
   </div>
 
-  <!-- 結尾畫面 -->
   <div id="end-screen">
     <div class="main-title">未完待續</div>
     <div class="sub-title">記憶的波形，仍在回盪...</div>
@@ -33,7 +62,7 @@
   
   <div id="mobile-controls">
     <div class="d-pad"><button class="touch-btn" id="btn-left">◀</button><button class="touch-btn" id="btn-right">▶</button></div>
-    <button class="interact-btn" id="btn-act">E 互動</button>
+    <button class="interact-btn" id="btn-act" onclick="World.handleInteract()">E 互動</button>
   </div>
   
   <div id="dialogue-area">
@@ -42,7 +71,6 @@
     <div class="dialogue-actions" id="dialogue-actions"></div>
   </div>
 
-  <!-- 解謎彈窗區 -->
   <div id="puzzle-overlay">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
       <h3 id="puzzle-title" style="color:var(--memory); font-size:1.1rem;">【共感解謎】</h3>
@@ -52,7 +80,7 @@
       <div style="color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between;"><span id="v-title">程曦：視覺重組</span><span id="p-v-status">未開啟</span></div>
       <div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;"><canvas id="vision-canvas" style="width:100%; height:100%;"></canvas></div>
       <div id="touch-ui-area" style="width:100%; height:6px; background:#161b22; border-radius:3px; overflow:hidden; margin-top:4px;"><div id="p-overload-bar" style="width:0%; height:100%; background:var(--accent); transition:0.1s;"></div></div>
-      <button class="p-btn" id="p-touch-btn" onmousedown="Puzzle.startTouch()" onmouseup="Puzzle.stopTouch()" ontouchstart="Puzzle.startTouch()" ontouchend="Puzzle.stopTouch()">🖐 按住維持觸摸 (小心過載)</button>
+      <button class="p-btn" id="p-touch-btn">🖐 點擊觸摸黑膠</button>
       <button class="p-btn" id="p-rhythm-btn" style="display:none; background:var(--memory); color:#000; font-weight:bold;" onclick="Puzzle.hitRhythm()">🎵 跟隨舞步 (抓準光圈重合)</button>
     </div>
     <div class="p-card" id="card-audio">
@@ -67,11 +95,186 @@
     </div>
     <button class="sync-act-btn" id="sync-act-btn" onclick="Puzzle.attemptSync()">⚡ 記憶對齊 (SYNC)</button>
   </div>
-
   <div id="story-modal"><h2 id="modal-title"></h2><p id="modal-desc"></p><button class="p-btn" style="padding:12px 32px; font-weight:bold; background:var(--accent); border:none;" onclick="Flow.onModalConfirm()">繼續</button></div>
 </div>
 
-<!-- 引入外部 JavaScript 檔案 -->
-<script src="game.js"></script>
+<script>
+var Assets = {
+  chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(), barBg: new Image(),
+  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false, roomBgLoaded: false, barBgLoaded: false,
+  init() { 
+    this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
+    this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
+    this.xiangmuImg.src = 'xiangmu.png'; this.xiangmuImg.onload = () => this.xiangmuLoaded = true;
+    this.roomBg.src = 'room-bg.png'; this.roomBg.onload = () => this.roomBgLoaded = true;
+    this.barBg.src = 'bar-bg.png'; this.barBg.onload = () => this.barBgLoaded = true;
+  }
+};
+
+var Flow = {
+  currentAct: 2, canInteract: false, dialogueQueue: [], onDialogueEnd: null,
+  startGame() { document.getElementById('start-screen').style.display = 'none'; },
+  endGame() { document.getElementById('end-screen').style.display = 'flex'; },
+  startDialogue(queue, callback) {
+    this.dialogueQueue = [...queue]; this.onDialogueEnd = callback; this.nextDialogue();
+  },
+  nextDialogue() {
+    const dTag = document.getElementById('speaker-tag'); const dText = document.getElementById('dialogue-text'); const dActions = document.getElementById('dialogue-actions');
+    if (this.dialogueQueue.length === 0) { if (this.onDialogueEnd) this.onDialogueEnd(); else dActions.innerHTML = ""; return; }
+    let current = this.dialogueQueue.shift(); dTag.innerText = current.n; dText.innerText = current.t;
+    dActions.innerHTML = `<button class="action-btn-sm" onclick="Flow.nextDialogue()">繼續 ➔</button>`;
+  },
+  setAct(act) {
+    this.currentAct = act; this.canInteract = false; 
+    const sub = document.getElementById('chapter-sub'); const badge = document.getElementById('chapter-badge');
+    document.getElementById('dialogue-actions').innerHTML = "";
+    if (act === 2) {
+      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 200; World.partner.x = 600; 
+      this.startDialogue([ { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" }, { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" }, { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到桌子旁按下 [E] 觸碰黑膠)</span>`; this.canInteract = true; });
+    } else if (act === 3) {
+      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 400; 
+      this.startDialogue([ { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" }, { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" }, { n: "程曦", t: "「海邊……」" }, { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到舊皮鞋旁按下 [E] 進入夢境)</span>`; this.canInteract = true; });
+    } else if (act === 4) {
+      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 250; World.partner.x = 550; 
+      this.startDialogue([ { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" }, { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" }, { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到破碎的鏡子前按下 [E] 凝視)</span>`; this.canInteract = true; });
+    }
+  },
+  afterVinylPuzzle() { this.startDialogue([ { n: "系統", t: "一個穿著舞鞋的女孩身處昏黃燈光下的舞池，一邊跳舞，一邊哭泣，彷彿在低聲懇求：「不要走……求你……」" }, { n: "系統", t: "程曦猛地回神，手開始顫抖，唱片不穩，輕輕一滑，啪嗒落地。" }, { n: "系統", t: "她驚了一下，迅速後退半步，深吸一口氣，連忙戴上手套。" }, { n: "戲院老闆", t: "「還好吧？這唱片有點年紀了，要小心些。」" }, { n: "程曦", t: "「……對不起。」" }, { n: "戲院老闆", t: "「沒事。這是我偶然間找到的錄影機，看來是我叔叔和我媽媽在練習跳舞，不知道對你們有沒有幫助。」" }, { n: "系統", t: "錄影機裡傳來輕快的圓舞曲。程曦接過錄影機，決定回房間仔細梳理。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(3)">進入下一幕 ➔</button>`; }); },
+  afterDreamPuzzle() { this.startDialogue([ { n: "系統", t: "夢境裡，兩人牽手在小巷裡走……畫面漸暗。最後定格在男孩靠近女孩的耳邊，清晰地說了一句：「我愛妳」。" }, { n: "系統", t: "程曦猛地睜眼，一滴眼淚從眼角滴落。她怔怔看向窗外亮起的天空。" }, { n: "程曦", t: "「海邊……」" }, { n: "系統", t: "她急忙披上外套，衝出房門，去敲李相暮的門。" }, { n: "李相暮", t: "「早上七點妳在幹嘛？」" }, { n: "程曦", t: "「海邊、皮鞋、戲院、港口、軍人……」" }, { n: "系統", t: "兩人比對了彼此的殘留記憶與樂譜，發現兩段命運開始重疊。隨後，他們跟著劇組來到了勘景地。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(4)">前往廢棄酒吧 ➔</button>`; }); },
+  afterDancePuzzle() { this.startDialogue([ { n: "系統", t: "程曦跟著鏡中殘影的節奏，順利完成了「旋轉」與「跨步」……" }, { n: "系統", t: "但在進行到第三步「單腳重心前傾」時，卻不幸失去平衡，整個人向後倒去！" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--danger); font-size:1.2rem; padding:16px;" onclick="Flow.catchHer()">[E] 李相暮接住她！</button>`; }); },
+  catchHer() { this.startDialogue([ { n: "系統", t: "李相暮眼疾手快，一把接住她。" }, { n: "系統", t: "兩人相視，呼吸交錯。" }, { n: "系統", t: "空氣一陣靜默。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--memory); color:#000; font-weight:bold;" onclick="Flow.endGame()">查看結尾</button>`; }); }
+};
+
+var World = {
+  canvas: null, ctx: null, keys: {}, player: { x: 200, y: 190, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, partner: { x: 600, y: 190, dir: -1 }, activePrompt: null,
+  init() {
+    Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
+    this.canvas.width = 800; this.canvas.height = 320; this.ctx.imageSmoothingEnabled = false;
+    window.addEventListener('keydown', e => { this.keys[e.key.toLowerCase()] = true; if(e.key.toLowerCase()==='e') this.handleInteract(); });
+    window.addEventListener('keyup', e => this.keys[e.key.toLowerCase()] = false);
+    this.setupTouch('btn-left', 'arrowleft'); this.setupTouch('btn-right', 'arrowright');
+    Flow.setAct(2); this.loop();
+  },
+  setupTouch(id, key) { const el = document.getElementById(id); el.addEventListener('touchstart', e => { e.preventDefault(); this.keys[key] = true; }); el.addEventListener('touchend', e => { e.preventDefault(); this.keys[key] = false; }); },
+  handleInteract() { if (!Flow.canInteract) return; if (this.activePrompt === 'ITEM_VINYL') Puzzle.open(1); else if (this.activePrompt === 'ITEM_DREAM') Puzzle.open(2); else if (this.activePrompt === 'ITEM_DANCE') Puzzle.open(3); },
+  update() {
+    let moving = false;
+    if (this.keys['a'] || this.keys['arrowleft']) { this.player.x -= this.player.speed; this.player.dir = -1; moving = true; }
+    if (this.keys['d'] || this.keys['arrowright']) { this.player.x += this.player.speed; this.player.dir = 1; moving = true; }
+    this.player.x = Math.max(60, Math.min(740, this.player.x)); this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
+    
+    const prompt = document.getElementById('interact-prompt');
+    if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
+    if (Flow.currentAct === 2 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
+    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 380) < 70) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
+    else if (Flow.currentAct === 4 && Math.abs(this.player.x - 450) < 70) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
+    else { this.activePrompt = null; prompt.style.display = 'none'; }
+  },
+  draw() {
+    this.ctx.clearRect(0, 0, 800, 320);
+    if (Flow.currentAct === 2) {
+      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, 800, 320); 
+      else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#121722"; this.ctx.fillRect(0, 210, 800, 110); }
+      this.ctx.fillStyle = "#2d241c"; this.ctx.fillRect(340, 190, 80, 40); this.ctx.fillStyle = "#111"; this.ctx.beginPath(); this.ctx.ellipse(380, 185, 20, 8, 0, 0, Math.PI*2); this.ctx.fill();
+    } else if (Flow.currentAct === 3) {
+      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, 800, 320);
+      else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#11151f"; this.ctx.fillRect(0, 210, 800, 110); this.ctx.fillStyle = "#1c2130"; this.ctx.fillRect(300, 80, 160, 130); this.ctx.fillStyle = "#3e2723"; this.ctx.fillRect(360, 200, 40, 15); }
+    } else if (Flow.currentAct === 4) {
+      if (Assets.barBgLoaded) this.ctx.drawImage(Assets.barBg, 0, 0, 800, 320);
+      else { this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0; }
+    }
+    if (Flow.currentAct !== 3) this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
+    this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame)*4 : 0);
+  },
+  renderChengXi(x, y, dir, bounce) {
+    const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 72, 24, 8, 0, 0, Math.PI * 2); ctx.fill();
+    if (Assets.chengxiLoaded) { const drawH = 145; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; ctx.drawImage(Assets.chengxiImg, -drawW / 2, -65, drawW, drawH); } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-10, -30, 20, 50); }
+    ctx.restore();
+  },
+  renderXiangMu(x, y, dir) {
+    const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 74, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
+    if (Assets.xiangmuLoaded) { const drawH = 152; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -70, drawW, drawH); } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15); ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40); }
+    ctx.restore();
+  },
+  loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
+};
+
+var Puzzle = {
+  type: 1, isTouch: false, overload: 0, clarity: 0.1, val1: 0, val2: 0, isVReady: false, isAReady: false, phase: 0, recordAngle: 0, targetR: 60, hitCount: 0,
+  open(type) { 
+    this.type = type; document.getElementById('puzzle-overlay').classList.add('show');
+    this.vC = document.getElementById('vision-canvas'); this.vCtx = this.vC.getContext('2d'); this.vC.width = 300; this.vC.height = 90;
+    this.wC = document.getElementById('waveform-canvas'); this.wCtx = this.wC.getContext('2d'); this.wC.width = 300; this.wC.height = 90;
+    this.isTouch = false; this.overload = 0; this.clarity = 0.1; this.val1 = 0; this.val2 = 0; this.hitCount = 0; this.targetR = 60; this.isVReady = false; this.isAReady = false;
+    const s1 = document.getElementById('slider1'); if (s1) s1.value = 0; const s2 = document.getElementById('slider2'); if (s2) s2.value = 0;
+    document.getElementById('slider1-val-txt').innerText = "0"; document.getElementById('slider2-val-txt').innerText = "0";
+    const touchBtn = document.getElementById('p-touch-btn'); touchBtn.onclick = () => this.toggleTouch();
+    if (type === 1) {
+      document.getElementById('puzzle-title').innerText = "【雙軌共感：泛黃的黑膠】"; document.getElementById('card-audio').style.display = "flex"; document.getElementById('slider-area').style.display = "block"; document.getElementById('p-touch-btn').style.display = "block"; document.getElementById('touch-ui-area').style.display = "block"; document.getElementById('p-rhythm-btn').style.display = "none"; document.getElementById('sync-act-btn').style.display = "block"; touchBtn.style.background = "var(--panel-bg)"; touchBtn.style.color = "#fff"; touchBtn.innerText = "🖐 點擊觸摸黑膠 (再次點擊鬆手)";
+    } else if (type === 2) {
+      document.getElementById('puzzle-title').innerText = "【時間軸：無聲的共感夢境】"; document.getElementById('card-audio').style.display = "flex"; document.getElementById('slider1-label').innerText = "時間點"; document.getElementById('slider2-label').innerText = "環境音軌"; document.getElementById('p-touch-btn').style.display = "none"; document.getElementById('touch-ui-area').style.display = "none"; document.getElementById('p-rhythm-btn').style.display = "none"; document.getElementById('sync-act-btn').style.display = "block";
+    } else if (type === 3) {
+      document.getElementById('puzzle-title').innerText = "【鏡中獨舞：抓準重心節奏】"; document.getElementById('card-audio').style.display = "none"; document.getElementById('sync-act-btn').style.display = "none"; document.getElementById('p-touch-btn').style.display = "none"; document.getElementById('touch-ui-area').style.display = "none"; document.getElementById('p-rhythm-btn').style.display = "block"; document.getElementById('p-rhythm-btn').innerText = "🎵 跟隨舞步 (抓準光圈重合)"; document.getElementById('p-rhythm-btn').style.background = "var(--memory)";
+    }
+    this.eval(); this.puzzleLoop(); 
+  },
+  close() { document.getElementById('puzzle-overlay').classList.remove('show'); this.isTouch = false; this.overload = 0; },
+  toggleTouch() {
+    if (this.type !== 1) return; this.isTouch = !this.isTouch; const btn = document.getElementById('p-touch-btn');
+    if (this.isTouch) { btn.style.background = "var(--memory)"; btn.style.color = "#000"; btn.innerText = "🖐 正在觸摸... (注意過載！)"; } else { btn.style.background = "var(--panel-bg)"; btn.style.color = "#fff"; btn.innerText = "🖐 點擊觸碰黑膠 (再次點擊鬆手)"; }
+  },
+  onSlider1(v) { this.val1 = parseInt(v); document.getElementById('slider1-val-txt').innerText = this.val1; this.eval(); },
+  onSlider2(v) { this.val2 = parseInt(v); document.getElementById('slider2-val-txt').innerText = this.val2; this.eval(); },
+  eval() {
+    const vStat = document.getElementById('p-v-status'); const aStat = document.getElementById('p-a-status');
+    if (this.type === 1) { this.isAReady = (this.val1 >= 20 && this.val2 >= 60 && this.val2 <= 90); aStat.innerText = this.isAReady ? "【人聲鎖定】" : "高噪訊..."; aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)"; }
+    else if (this.type === 2) { this.isVReady = (this.val1 > 70 && this.val1 < 85); this.isAReady = (this.val2 > 75 && this.val2 < 90); vStat.innerText = this.isVReady ? "【畫面重疊】" : "殘影破碎"; vStat.style.color = this.isVReady ? "var(--memory)" : "#8b949e"; aStat.innerText = this.isAReady ? "【音軌咬合】" : "頻率錯位"; aStat.style.color = this.isAReady ? "var(--green)" : "var(--danger)"; }
+    const syncBtn = document.getElementById('sync-act-btn');
+    if (this.type !== 3) {
+      if (this.isVReady && this.isAReady) { syncBtn.className = 'sync-act-btn ready'; syncBtn.innerText = "✨ 記憶已完全對齊！點擊同步 ✨"; } 
+      else { syncBtn.className = 'sync-act-btn'; if (!this.isVReady && !this.isAReady) syncBtn.innerText = "⚠️ 畫面與頻率皆未對齊"; else if (!this.isVReady) syncBtn.innerText = "⚠️ 畫面尚未聚焦"; else if (!this.isAReady) syncBtn.innerText = "⚠️ 聲音頻率未鎖定"; }
+    }
+  },
+  hitRhythm() {
+    const btn = document.getElementById('p-rhythm-btn');
+    if (this.targetR > 15 && this.targetR < 35) {
+      this.hitCount++; this.targetR = 60;
+      if (this.hitCount === 3) { btn.innerText = `⚠️ 失去平衡！`; btn.style.background = "var(--danger)"; setTimeout(() => { this.close(); Flow.afterDancePuzzle(); }, 600); } 
+      else { btn.innerText = `🎵 完美對齊！(${this.hitCount}/3)`; btn.style.background = "var(--green)"; setTimeout(() => { if (document.getElementById('puzzle-overlay').classList.contains('show')) { btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; } }, 500); }
+    } else { 
+      this.hitCount = 0; this.targetR = 60; btn.innerText = "❌ 節奏錯誤，重新抓拍！"; btn.style.background = "var(--danger)"; setTimeout(() => { if (document.getElementById('puzzle-overlay').classList.contains('show')) { btn.style.background = "var(--memory)"; btn.innerText = "🎵 跟隨舞步 (抓準光圈重合)"; } }, 600); 
+    } 
+  },
+  attemptSync() { if (this.isVReady && this.isAReady) { this.close(); if (this.type === 1) { Flow.afterVinylPuzzle(); } else if (this.type === 2) { Flow.afterDreamPuzzle(); } } },
+  puzzleLoop() {
+    if (!document.getElementById('puzzle-overlay').classList.contains('show')) return;
+    this.vCtx.fillStyle = "#05070a"; this.vCtx.fillRect(0, 0, 300, 90);
+    if (this.type === 1) {
+      this.overload = this.isTouch ? Math.min(100, this.overload + 0.3) : Math.max(0, this.overload - 0.8); this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
+      if (this.overload >= 100) { this.toggleTouch(); this.overload = 0; this.clarity = 0.1; alert("【過載】程曦手一抖，唱片差點掉落！"); }
+      document.getElementById('p-overload-bar').style.width = `${this.overload}%`;
+      this.isVReady = (this.clarity >= 0.85 && this.overload < 90);
+      const vStat = document.getElementById('p-v-status'); if (this.isVReady) { vStat.innerText = "【殘影清晰】"; vStat.style.color = "var(--memory)"; } else { vStat.innerText = this.isTouch ? "聚焦中..." : "未觸摸"; vStat.style.color = "#8b949e"; }
+      this.eval();
+      this.vCtx.save(); this.vCtx.translate(150, 45); this.recordAngle += this.isTouch ? 0.05 : 0.01; this.vCtx.rotate(this.recordAngle); this.vCtx.fillStyle = "#111"; this.vCtx.beginPath(); this.vCtx.arc(0, 0, 40, 0, Math.PI*2); this.vCtx.fill(); this.vCtx.restore();
+    } else if (this.type === 2) {
+      let offset = Math.abs(75 - this.val1); this.vCtx.globalAlpha = Math.max(0.2, 1 - (offset * 0.02)); this.vCtx.fillStyle = "#58a6ff"; this.vCtx.fillRect(140 - offset, 30, 15, 30); this.vCtx.fillStyle = "#e5b544"; this.vCtx.fillRect(160 + offset, 35, 12, 25); this.vCtx.globalAlpha = 1.0;
+    } else if (this.type === 3) {
+      this.vCtx.fillStyle = "#e5b544"; this.vCtx.fillRect(145, 30, 10, 30); this.vCtx.strokeStyle = "#fff"; this.vCtx.beginPath(); this.vCtx.arc(150, 45, 25, 0, Math.PI*2); this.vCtx.stroke(); this.targetR -= 0.6; if (this.targetR < 10) this.targetR = 60; this.vCtx.strokeStyle = "rgba(88,166,255,0.8)"; this.vCtx.beginPath(); this.vCtx.arc(150, 45, this.targetR, 0, Math.PI*2); this.vCtx.stroke();
+      document.getElementById('v-title').innerText = `節奏判定 (第 ${this.hitCount + 1}/3 步：${['旋轉','跨步','單腳重心前傾'][this.hitCount] || ''})`;
+    }
+    if (this.type !== 3) {
+      this.wCtx.fillStyle = "#030406"; this.wCtx.fillRect(0, 0, 300, 90); this.wCtx.strokeStyle = this.isAReady ? "#3fb950" : "#f85149"; this.wCtx.beginPath();
+      for(let i=0; i<=30; i++) { const x = i*10; const y = 45 + Math.sin(i*0.4 + this.phase) * (this.isAReady ? 10 : 30) * (this.isAReady ? Math.sin(i*0.3+this.phase) : (Math.random()-0.5)*2); if(i===0) this.wCtx.moveTo(x,y); else this.wCtx.lineTo(x,y); }
+      this.wCtx.stroke(); this.phase += 0.15;
+    }
+    requestAnimationFrame(() => this.puzzleLoop());
+  }
+};
+
+window.onload = () => World.init();
+</script>
 </body>
 </html>
