@@ -21,7 +21,6 @@
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   #interact-prompt { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 10; }
   
-  /* 🪄 改良1：控制按鈕區加大，更有存在感 */
   #mobile-controls { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #0b0e14; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .d-pad { display: flex; gap: 16px; }
   .touch-btn, .interact-btn { height: 65px; background: #1f2633; border: 1px solid var(--border); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
@@ -29,36 +28,11 @@
   .interact-btn { width: 130px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.2rem; font-weight: bold; letter-spacing: 1px; }
   .touch-btn:active, .interact-btn:active { transform: scale(0.95); }
   
-  /* 🪄 改良2：對話區加上漸層、內陰影，看起來像遊戲操作台 */
-  #dialogue-area { 
-    background: linear-gradient(180deg, #121722 0%, #050608 100%); 
-    padding: 24px 24px calc(24px + env(safe-area-inset-bottom)); 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 12px; 
-    overflow-y: auto; 
-    touch-action: pan-y;
-    box-shadow: inset 0 10px 20px rgba(0,0,0,0.3);
-  }
+  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 24px 24px calc(24px + env(safe-area-inset-bottom)); flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
   .speaker-name { font-size: 1.15rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; } 
   .dialogue-body { font-size: 1.15rem; line-height: 1.7; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
   
-  /* 🪄 改良3：神奇魔法！把按鈕自動推到畫面最底部，消滅空虛黑邊 */
-  .action-btn-sm { 
-    padding: 16px 20px; 
-    background: rgba(31,38,51,0.8); 
-    border: 1px solid #3d4b66; 
-    color: #fff; 
-    border-radius: 8px; 
-    font-size: 1.15rem; 
-    cursor: pointer; 
-    display: block; 
-    width: 100%;
-    margin-top: auto; 
-    text-align: center;
-    transition: 0.2s;
-  }
+  .action-btn-sm { padding: 16px 20px; background: rgba(31,38,51,0.8); border: 1px solid #3d4b66; color: #fff; border-radius: 8px; font-size: 1.15rem; cursor: pointer; display: block; width: 100%; margin-top: auto; text-align: center; transition: 0.2s; }
   .action-btn-sm:active { background: #3d4b66; }
   
   #puzzle-overlay, #story-modal { position: absolute; inset: 0; z-index: 50; display: none; background: rgba(5,6,8,0.98); padding: 20px; overflow-y: auto; flex-direction: column; touch-action: pan-y; }
@@ -81,59 +55,17 @@
 </head>
 <body>
 <div id="game-wrapper">
-  
-  <div id="start-screen">
-    <div class="main-title">誰在三月失了神</div>
-    <div class="sub-title">雙軌共感 敘事體驗</div>
-    <button class="start-game-btn" onclick="Flow.startGame()">開始遊戲</button>
-  </div>
-
-  <div id="end-screen">
-    <div class="main-title">未完待續</div>
-    <div class="sub-title">記憶的波形，仍在回盪...</div>
-    <button class="p-btn" style="margin-top:20px; padding: 12px 30px;" onclick="location.reload()">重新體驗</button>
-  </div>
-
-  <header>
-    <div style="color: #fff;"><strong>誰在三月失了神</strong> <span id="chapter-sub" style="color:#8b949e; font-size:0.8rem; margin-left:6px;"></span></div>
-    <div class="badge" id="chapter-badge"></div>
-  </header>
-  
+  <div id="start-screen"><div class="main-title">誰在三月失了神</div><div class="sub-title">雙軌共感 敘事體驗</div><button class="start-game-btn" onclick="Flow.startGame()">開始遊戲</button></div>
+  <div id="end-screen"><div class="main-title">未完待續</div><div class="sub-title">記憶的波形，仍在回盪...</div><button class="p-btn" style="margin-top:20px; padding: 12px 30px;" onclick="location.reload()">重新體驗</button></div>
+  <header><div style="color: #fff;"><strong>誰在三月失了神</strong> <span id="chapter-sub" style="color:#8b949e; font-size:0.8rem; margin-left:6px;"></span></div><div class="badge" id="chapter-badge"></div></header>
   <div id="stage-wrap"><canvas id="world-canvas"></canvas><div id="interact-prompt">[E] 互動</div></div>
+  <div id="mobile-controls"><div class="d-pad"><button class="touch-btn" id="btn-left">◀</button><button class="touch-btn" id="btn-right">▶</button></div><button class="interact-btn" id="btn-act">E 互動</button></div>
+  <div id="dialogue-area"><div class="speaker-name" id="speaker-tag"></div><div class="dialogue-body" id="dialogue-text"></div><div class="dialogue-actions" id="dialogue-actions"></div></div>
   
-  <div id="mobile-controls">
-    <div class="d-pad"><button class="touch-btn" id="btn-left">◀</button><button class="touch-btn" id="btn-right">▶</button></div>
-    <button class="interact-btn" id="btn-act">E 互動</button>
-  </div>
-  
-  <div id="dialogue-area">
-    <div class="speaker-name" id="speaker-tag"></div>
-    <div class="dialogue-body" id="dialogue-text"></div>
-    <div class="dialogue-actions" id="dialogue-actions"></div>
-  </div>
-
   <div id="puzzle-overlay">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-      <h3 id="puzzle-title" style="color:var(--memory); font-size:1.1rem;">【共感解謎】</h3>
-      <button class="p-btn" onclick="Puzzle.close()" style="padding:6px 12px;">返回</button>
-    </div>
-    <div class="p-card" id="card-vision">
-      <div style="color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between;"><span id="v-title">程曦：視覺重組</span><span id="p-v-status">未開啟</span></div>
-      <div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;"><canvas id="vision-canvas" style="width:100%; height:100%;"></canvas></div>
-      <div id="touch-ui-area" style="width:100%; height:6px; background:#161b22; border-radius:3px; overflow:hidden; margin-top:4px;"><div id="p-overload-bar" style="width:0%; height:100%; background:var(--accent); transition:0.1s;"></div></div>
-      <button class="p-btn" id="p-touch-btn">🖐 點擊觸摸黑膠</button>
-      <button class="p-btn" id="p-rhythm-btn" style="display:none; background:var(--memory); color:#000; font-weight:bold;" onclick="Puzzle.hitRhythm()">🎵 跟隨舞步 (抓準光圈重合)</button>
-    </div>
-    <div class="p-card" id="card-audio">
-      <div style="color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between;"><span>李相暮：頻率 / 記憶</span><span id="p-a-status" style="color:var(--danger);">高噪訊</span></div>
-      <div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;"><canvas id="waveform-canvas" style="width:100%; height:100%;"></canvas></div>
-      <div id="slider-area" style="margin-top:8px;">
-        <div style="font-size:0.8rem; color:#8b949e; display:flex; justify-content:space-between;"><span id="slider1-label">滑桿1</span><span id="slider1-val-txt">60</span></div>
-        <input type="range" id="slider1" min="0" max="100" value="0" style="width:100%; accent-color:var(--memory);" oninput="Puzzle.onSlider1(this.value)">
-        <div style="font-size:0.8rem; color:#8b949e; display:flex; justify-content:space-between; margin-top:4px;"><span id="slider2-label">滑桿2</span><span id="slider2-val-txt">0</span></div>
-        <input type="range" id="slider2" min="0" max="100" value="0" style="width:100%; accent-color:var(--memory);" oninput="Puzzle.onSlider2(this.value)">
-      </div>
-    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;"><h3 id="puzzle-title" style="color:var(--memory); font-size:1.1rem;">【共感解謎】</h3><button class="p-btn" onclick="Puzzle.close()" style="padding:6px 12px;">返回</button></div>
+    <div class="p-card" id="card-vision"><div style="color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between;"><span id="v-title">程曦：視覺重組</span><span id="p-v-status">未開啟</span></div><div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;"><canvas id="vision-canvas" style="width:100%; height:100%;"></canvas></div><div id="touch-ui-area" style="width:100%; height:6px; background:#161b22; border-radius:3px; overflow:hidden; margin-top:4px;"><div id="p-overload-bar" style="width:0%; height:100%; background:var(--accent); transition:0.1s;"></div></div><button class="p-btn" id="p-touch-btn">🖐 點擊觸摸黑膠</button><button class="p-btn" id="p-rhythm-btn" style="display:none; background:var(--memory); color:#000; font-weight:bold;" onclick="Puzzle.hitRhythm()">🎵 跟隨舞步 (抓準光圈重合)</button></div>
+    <div class="p-card" id="card-audio"><div style="color: #8b949e; border-bottom: 1px solid #1a202c; padding-bottom: 4px; display: flex; justify-content: space-between;"><span>李相暮：頻率 / 記憶</span><span id="p-a-status" style="color:var(--danger);">高噪訊</span></div><div style="height:90px; background:#000; border:1px solid #1a202c; border-radius:4px; overflow:hidden;"><canvas id="waveform-canvas" style="width:100%; height:100%;"></canvas></div><div id="slider-area" style="margin-top:8px;"><div style="font-size:0.8rem; color:#8b949e; display:flex; justify-content:space-between;"><span id="slider1-label">滑桿1</span><span id="slider1-val-txt">60</span></div><input type="range" id="slider1" min="0" max="100" value="0" style="width:100%; accent-color:var(--memory);" oninput="Puzzle.onSlider1(this.value)"><div style="font-size:0.8rem; color:#8b949e; display:flex; justify-content:space-between; margin-top:4px;"><span id="slider2-label">滑桿2</span><span id="slider2-val-txt">0</span></div><input type="range" id="slider2" min="0" max="100" value="0" style="width:100%; accent-color:var(--memory);" oninput="Puzzle.onSlider2(this.value)"></div></div>
     <button class="sync-act-btn" id="sync-act-btn" onclick="Puzzle.attemptSync()">⚡ 記憶對齊 (SYNC)</button>
   </div>
 </div>
@@ -162,7 +94,6 @@ var Flow = {
     const dTag = document.getElementById('speaker-tag'); const dText = document.getElementById('dialogue-text'); const dActions = document.getElementById('dialogue-actions');
     if (this.dialogueQueue.length === 0) { if (this.onDialogueEnd) this.onDialogueEnd(); else dActions.innerHTML = ""; return; }
     let current = this.dialogueQueue.shift(); dTag.innerText = current.n; dText.innerText = current.t;
-    // 這裡我們把按鈕稍微微調，配合新的 CSS
     dActions.innerHTML = `<button class="action-btn-sm" onclick="Flow.nextDialogue()">繼續對話 ➔</button>`;
   },
   setAct(act) {
@@ -191,7 +122,10 @@ var World = {
   canvas: null, ctx: null, keys: {}, 
   player: { x: 200, y: 210, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, 
   partner: { x: 900, y: 210, dir: -1 }, 
-  activePrompt: null, worldWidth: 1200, cameraX: 0,
+  activePrompt: null,
+  
+  // 啟動 1200 寬度的捲軸世界
+  worldWidth: 1200, cameraX: 0,
 
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
@@ -222,12 +156,14 @@ var World = {
     this.player.x = Math.max(60, Math.min(this.worldWidth - 60, this.player.x)); 
     this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
     
+    // 攝影機跟隨
     this.cameraX = this.player.x - 400;
     this.cameraX = Math.max(0, Math.min(this.worldWidth - 800, this.cameraX));
 
     const prompt = document.getElementById('interact-prompt');
     if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
     
+    // 21:9 寬圖的互動點座標
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 570) < 80) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 825) < 80) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 675) < 80) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
@@ -239,18 +175,18 @@ var World = {
     this.ctx.save();
     this.ctx.translate(-this.cameraX, 0);
 
+    // 完美適配 21:9 的寬螢幕捲軸繪製 (不裁切上下，完整呈現)
     const bgW = this.worldWidth;
-    const bgH = this.worldWidth * (320/800); 
-    const offsetY = -160; 
+    const bgH = 320; 
 
     if (Flow.currentAct === 2) {
-      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, offsetY, bgW, bgH); 
+      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, bgW, bgH); 
       else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, bgW, 320); }
     } else if (Flow.currentAct === 3) {
-      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, offsetY, bgW, bgH);
+      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, bgW, bgH);
       else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, bgW, 320); }
     } else if (Flow.currentAct === 4) {
-      if (Assets.barBgLoaded) this.ctx.drawImage(Assets.barBg, 0, offsetY, bgW, bgH);
+      if (Assets.barBgLoaded) this.ctx.drawImage(Assets.barBg, 0, 0, bgW, bgH);
       else { this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, bgW, 320); }
     }
     
