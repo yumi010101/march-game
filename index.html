@@ -7,14 +7,14 @@
 <style>
   :root { --bg-dark: #07090e; --panel-bg: #11151f; --border: #232a3d; --text: #ffffff; --accent: #58a6ff; --memory: #e5b544; --danger: #f85149; --green: #3fb950; }
   
-  /* 【修復手機版充滿螢幕】鎖死 html 和 body，禁止整個網頁被拖拉滑動 */
-  html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg-dark); touch-action: none; }
+  /* 【修復滿版】使用 100dvh 讓畫面絕對填滿手機動態螢幕 */
+  html, body { height: 100%; height: 100dvh; width: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg-dark); touch-action: none; }
   * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
   
   body { display: flex; justify-content: center; align-items: center; color: var(--text); font-family: -apple-system, sans-serif; }
   
-  /* 遊戲容器：在手機上 100% 填滿，在電腦上才加上邊框和最大高度 */
-  #game-wrapper { width: 100%; max-width: 800px; height: 100%; background: var(--panel-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  /* 遊戲容器保證 100dvh 高度 */
+  #game-wrapper { width: 100%; max-width: 800px; height: 100%; height: 100dvh; background: var(--panel-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
   
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.9rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
@@ -29,8 +29,8 @@
   .touch-btn { width: 70px; font-size: 1.5rem; } .interact-btn { width: 120px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; }
   .touch-btn:active { background: var(--accent); } .interact-btn:active { background: var(--memory); color: #000; }
   
-  /* 對話區塊：flex-grow 讓它佔滿剩下的所有高度，並允許內部獨立滑動 */
-  #dialogue-area { background: #090c12; padding: 16px 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; touch-action: pan-y; }
+  /* 【修復滿版】flex: 1 確保它吸滿所有剩餘的底部空間 */
+  #dialogue-area { background: #090c12; padding: 16px 20px; flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; touch-action: pan-y; }
   .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; } 
   .dialogue-body { font-size: 1.05rem; line-height: 1.6; color: #e6edf3; flex-shrink: 0; }
   .action-btn-sm { padding: 12px 16px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; margin-top: 8px; cursor: pointer; display: inline-block; flex-shrink: 0; }
@@ -50,7 +50,7 @@
   .start-game-btn { padding: 16px 40px; font-size: 1.2rem; font-weight: bold; background: var(--accent); color: #fff; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(88,166,255,0.3); transition: 0.2s; }
   .start-game-btn:active { transform: scale(0.95); background: #3b8eed; }
   
-  @media (min-width: 800px) { #game-wrapper { height: 90%; max-height: 750px; border: 1px solid var(--border); border-radius: 12px; } }
+  @media (min-width: 800px) { #game-wrapper { height: 90%; height: 90dvh; max-height: 750px; border: 1px solid var(--border); border-radius: 12px; } }
 </style>
 </head>
 <body>
@@ -162,7 +162,6 @@ var Flow = {
 
 var World = {
   canvas: null, ctx: null, keys: {}, 
-  // 【修復角色浮空】將角色 Y 座標往下移動 (從 190 改為 210)，讓腳底板完美貼合地板
   player: { x: 200, y: 210, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, 
   partner: { x: 900, y: 210, dir: -1 }, 
   activePrompt: null,
@@ -204,7 +203,6 @@ var World = {
     if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
     
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 570) < 80) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
-    // 鞋子座標依然設定為你算出來的 825 (550 * 1.5)
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 825) < 80) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 675) < 80) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
     else { this.activePrompt = null; prompt.style.display = 'none'; }
@@ -217,7 +215,6 @@ var World = {
 
     const bgW = this.worldWidth;
     const bgH = this.worldWidth * (320/800); 
-    // 【修復場景垂直對齊】讓放大後的圖片稍微往下壓 (-100)，確保原圖下方的木地板可以顯示出來
     const offsetY = -100; 
 
     if (Flow.currentAct === 2) {
@@ -236,16 +233,26 @@ var World = {
     
     this.ctx.restore();
   },
+  
+  /* 【修復人物比例】高度從 145 調整至 240，並修正繪製位移讓腳貼地 */
   renderChengXi(x, y, dir, bounce) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
     ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 72, 24, 8, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.chengxiLoaded) { const drawH = 145; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; ctx.drawImage(Assets.chengxiImg, -drawW / 2, -65, drawW, drawH); } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-10, -30, 20, 50); }
+    if (Assets.chengxiLoaded) { 
+      const drawH = 240; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; 
+      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -160, drawW, drawH); 
+    } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-10, -30, 20, 50); }
     ctx.restore();
   },
+  
+  /* 【修復人物比例】高度從 152 調整至 255 */
   renderXiangMu(x, y, dir) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
     ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 74, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.xiangmuLoaded) { const drawH = 152; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -70, drawW, drawH); } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15); ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40); }
+    if (Assets.xiangmuLoaded) { 
+      const drawH = 255; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; 
+      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -173, drawW, drawH); 
+    } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15); ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40); }
     ctx.restore();
   },
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
