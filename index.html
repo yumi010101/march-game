@@ -2,32 +2,46 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>誰在三月失了神 - 完整三幕劇</title>
 <style>
   :root { --bg-dark: #07090e; --panel-bg: #11151f; --border: #232a3d; --text: #ffffff; --accent: #58a6ff; --memory: #e5b544; --danger: #f85149; --green: #3fb950; }
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
-  body { background: var(--bg-dark); color: var(--text); font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh; padding: 0; }
-  #game-wrapper { width: 100%; max-width: 800px; height: 100vh; background: var(--panel-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  
+  /* 【修復手機版充滿螢幕】鎖死 html 和 body，禁止整個網頁被拖拉滑動 */
+  html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg-dark); touch-action: none; }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  
+  body { display: flex; justify-content: center; align-items: center; color: var(--text); font-family: -apple-system, sans-serif; }
+  
+  /* 遊戲容器：在手機上 100% 填滿，在電腦上才加上邊框和最大高度 */
+  #game-wrapper { width: 100%; max-width: 800px; height: 100%; background: var(--panel-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.9rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
+  
   #stage-wrap { width: 100%; aspect-ratio: 800 / 320; background: #020305; position: relative; flex-shrink: 0; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   #interact-prompt { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 10; }
-  #mobile-controls { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #0b0e14; border-bottom: 1px solid var(--border); }
+  
+  #mobile-controls { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #0b0e14; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .d-pad { display: flex; gap: 16px; }
-  .touch-btn, .interact-btn { height: 55px; background: #1f2633; border: 1px solid var(--border); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+  .touch-btn, .interact-btn { height: 55px; background: #1f2633; border: 1px solid var(--border); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; }
   .touch-btn { width: 70px; font-size: 1.5rem; } .interact-btn { width: 120px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; }
   .touch-btn:active { background: var(--accent); } .interact-btn:active { background: var(--memory); color: #000; }
-  #dialogue-area { background: #090c12; padding: 16px 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-  .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); } .dialogue-body { font-size: 1.05rem; line-height: 1.6; color: #e6edf3; }
-  .action-btn-sm { padding: 12px 16px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; margin-top: 8px; cursor: pointer; display: inline-block; }
-  #puzzle-overlay, #story-modal { position: absolute; inset: 0; z-index: 50; display: none; background: rgba(7,9,14,0.98); padding: 20px; overflow-y: auto; flex-direction: column; }
+  
+  /* 對話區塊：flex-grow 讓它佔滿剩下的所有高度，並允許內部獨立滑動 */
+  #dialogue-area { background: #090c12; padding: 16px 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; touch-action: pan-y; }
+  .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; } 
+  .dialogue-body { font-size: 1.05rem; line-height: 1.6; color: #e6edf3; flex-shrink: 0; }
+  .action-btn-sm { padding: 12px 16px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; margin-top: 8px; cursor: pointer; display: inline-block; flex-shrink: 0; }
+  
+  #puzzle-overlay, #story-modal { position: absolute; inset: 0; z-index: 50; display: none; background: rgba(7,9,14,0.98); padding: 20px; overflow-y: auto; flex-direction: column; touch-action: pan-y; }
   #puzzle-overlay.show, #story-modal.show { display: flex; }
   .p-card { background: #0b0e14; border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
   .p-btn { padding: 12px; background: #1f242c; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; cursor: pointer; }
   .sync-act-btn { padding: 16px; background: #21262d; border: 1px solid var(--border); color: #c9d1d9; border-radius: 6px; font-size: 1.1rem; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
   .sync-act-btn.ready { background: var(--green); color: #fff; box-shadow: 0 0 15px rgba(63,185,80,0.4); }
+  
   #story-modal { justify-content: center; align-items: center; text-align: center; } #story-modal h2 { color: var(--memory); margin-bottom: 16px; font-size: 1.4rem; } #story-modal p { line-height: 1.8; color: #e6edf3; margin-bottom: 24px; font-size: 1.05rem; white-space: pre-line; }
   #start-screen, #end-screen { position: absolute; inset: 0; z-index: 100; background: #040609; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
   #end-screen { display: none; }
@@ -35,7 +49,8 @@
   .sub-title { font-size: 1rem; color: #8b949e; margin-bottom: 40px; letter-spacing: 2px; }
   .start-game-btn { padding: 16px 40px; font-size: 1.2rem; font-weight: bold; background: var(--accent); color: #fff; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(88,166,255,0.3); transition: 0.2s; }
   .start-game-btn:active { transform: scale(0.95); background: #3b8eed; }
-  @media (min-width: 800px) { body { align-items: center; } #game-wrapper { height: 90vh; max-height: 700px; border: 1px solid var(--border); border-radius: 12px; } }
+  
+  @media (min-width: 800px) { #game-wrapper { height: 90%; max-height: 750px; border: 1px solid var(--border); border-radius: 12px; } }
 </style>
 </head>
 <body>
@@ -128,7 +143,6 @@ var Flow = {
     const sub = document.getElementById('chapter-sub'); const badge = document.getElementById('chapter-badge');
     document.getElementById('dialogue-actions').innerHTML = "";
     
-    // 初始化角色位置，現在地圖變寬了 (1200)，所以起始座標也有調整
     if (act === 2) {
       sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 200; World.partner.x = 900; 
       this.startDialogue([ { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" }, { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" }, { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<span style="color:#8b949e; font-size:0.9rem;">(提示：走到桌子旁按下 [E] 觸碰黑膠)</span>`; this.canInteract = true; });
@@ -148,13 +162,11 @@ var Flow = {
 
 var World = {
   canvas: null, ctx: null, keys: {}, 
-  player: { x: 200, y: 190, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, 
-  partner: { x: 900, y: 190, dir: -1 }, 
+  // 【修復角色浮空】將角色 Y 座標往下移動 (從 190 改為 210)，讓腳底板完美貼合地板
+  player: { x: 200, y: 210, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, 
+  partner: { x: 900, y: 210, dir: -1 }, 
   activePrompt: null,
-  
-  // 新增：捲軸運鏡系統
-  worldWidth: 1200, // 世界變得比畫面 (800) 還寬
-  cameraX: 0,       // 攝影機目前的位置
+  worldWidth: 1200, cameraX: 0,
 
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
@@ -182,21 +194,17 @@ var World = {
     if (this.keys['a'] || this.keys['arrowleft']) { this.player.x -= this.player.speed; this.player.dir = -1; moving = true; }
     if (this.keys['d'] || this.keys['arrowright']) { this.player.x += this.player.speed; this.player.dir = 1; moving = true; }
     
-    // 角色移動範圍改為限制在 worldWidth (1200) 之內
     this.player.x = Math.max(60, Math.min(this.worldWidth - 60, this.player.x)); 
     this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
     
-    // 【核心邏輯】攝影機跟隨程曦 (置中在畫面 400 的位置)
     this.cameraX = this.player.x - 400;
-    // 限制攝影機不要超出世界的左右邊界
     this.cameraX = Math.max(0, Math.min(this.worldWidth - 800, this.cameraX));
 
     const prompt = document.getElementById('interact-prompt');
     if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
     
-    // 因為世界變寬了 1.5 倍 (800 -> 1200)，所有物件座標也等比放大 1.5 倍
-    // 第二關的鞋子原本你設定在 550，乘上 1.5 後就是 825
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 570) < 80) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
+    // 鞋子座標依然設定為你算出來的 825 (550 * 1.5)
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 825) < 80) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 675) < 80) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
     else { this.activePrompt = null; prompt.style.display = 'none'; }
@@ -205,14 +213,12 @@ var World = {
   draw() {
     this.ctx.clearRect(0, 0, 800, 320);
     this.ctx.save();
-    
-    // 【核心繪圖】移動整個畫布，產生捲軸效果
     this.ctx.translate(-this.cameraX, 0);
 
-    // 為了填滿 1200 的世界，圖片會被等比例放大一點點，並置中裁切
     const bgW = this.worldWidth;
-    const bgH = this.worldWidth * (320/800); // 計算等比例放大的高度 (480)
-    const offsetY = -(bgH - 320) / 2; // 讓放大的圖片垂直置中
+    const bgH = this.worldWidth * (320/800); 
+    // 【修復場景垂直對齊】讓放大後的圖片稍微往下壓 (-100)，確保原圖下方的木地板可以顯示出來
+    const offsetY = -100; 
 
     if (Flow.currentAct === 2) {
       if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, offsetY, bgW, bgH); 
