@@ -17,8 +17,8 @@
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.85rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
   
-  /* 舞台固定 2:1 黃金比例，確保背景與人物完美呈現 */
-  #stage-wrap { width: 100%; aspect-ratio: 2 / 1; background: #020305; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
+  /* 嚴格鎖定 2:1 電影寬螢幕比例舞台 */
+  #stage-wrap { width: 100%; aspect-ratio: 2 / 1; background: #1c140f; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   #interact-prompt { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: none; z-index: 10; }
   
@@ -29,8 +29,8 @@
   .interact-btn { width: 110px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; }
   .touch-btn:active, .interact-btn:active { transform: scale(0.95); }
   
-  /* 系統對話框區塊，高度精煉下沉，絕不遮擋上方舞台 */
-  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 14px 20px 80px; flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
+  /* 系統對話框獨立沉在下方，保留充足底部安全區與 padding */
+  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 14px 20px calc(80px + env(safe-area-inset-bottom)); flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
   .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; } 
   .dialogue-body { font-size: 1rem; line-height: 1.5; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
   
@@ -75,13 +75,12 @@
 <script>
 var Assets = {
   chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(), barBg: new Image(),
-  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false, roomBgLoaded: false, barBgLoaded: false,
   init() { 
-    this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
-    this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
-    this.xiangmuImg.src = 'xiangmu.png'; this.xiangmuImg.onload = () => this.xiangmuLoaded = true;
-    this.roomBg.src = 'room-bg.png'; this.roomBg.onload = () => this.roomBgLoaded = true;
-    this.barBg.src = 'bar-bg.png'; this.barBg.onload = () => this.barBgLoaded = true;
+    this.chengxiImg.src = 'chengxi.png'; 
+    this.theaterBg.src = 'theater-bg.png'; 
+    this.xiangmuImg.src = 'xiangmu.png'; 
+    this.roomBg.src = 'room-bg.png'; 
+    this.barBg.src = 'bar-bg.png';
   }
 };
 
@@ -122,9 +121,8 @@ var Flow = {
 
 var World = {
   canvas: null, ctx: null, keys: {}, 
-  // 完美對應 2:1 世界尺寸 (1400x700)，角色精準踩在地板上
-  player: { x: 350, y: 560, speed: 6, dir: 1, isMoving: false, walkFrame: 0 }, 
-  partner: { x: 1100, y: 560, dir: -1 }, 
+  player: { x: 350, y: 550, speed: 6, dir: 1, isMoving: false, walkFrame: 0 }, 
+  partner: { x: 1100, y: 550, dir: -1 }, 
   activePrompt: null,
   
   viewportWidth: 800, viewportHeight: 400,
@@ -177,25 +175,11 @@ var World = {
     this.ctx.save();
     this.ctx.translate(-this.cameraX, 0);
 
-    if (Flow.currentAct === 2) {
-      if (Assets.theaterBgLoaded) {
-        this.ctx.drawImage(Assets.theaterBg, 0, 0, this.worldWidth, this.worldHeight);
-      } else {
-        this.ctx.fillStyle = "#1c140f"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight);
-      }
-    } else if (Flow.currentAct === 3) {
-      if (Assets.roomBgLoaded) {
-        this.ctx.drawImage(Assets.roomBg, 0, 0, this.worldWidth, this.worldHeight);
-      } else {
-        this.ctx.fillStyle = "#0c1017"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight);
-      }
-    } else if (Flow.currentAct === 4) {
-      if (Assets.barBgLoaded) {
-        this.ctx.drawImage(Assets.barBg, 0, 0, this.worldWidth, this.worldHeight);
-      } else {
-        this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight);
-      }
-    }
+    let currentBg = Assets.theaterBg;
+    if (Flow.currentAct === 3) currentBg = Assets.roomBg;
+    else if (Flow.currentAct === 4) currentBg = Assets.barBg;
+
+    this.ctx.drawImage(currentBg, 0, 0, this.worldWidth, this.worldHeight);
     
     if (Flow.currentAct !== 3) this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
     this.renderChengXi(this.player.x, this.player.y, this.player.dir, this.player.isMoving ? Math.sin(this.player.walkFrame)*4 : 0);
@@ -205,21 +189,17 @@ var World = {
   
   renderChengXi(x, y, dir, bounce) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 15, 45, 14, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.chengxiLoaded && Assets.chengxiImg.height > 0) { 
-      const drawH = 360; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; 
-      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -280, drawW, drawH); 
-    } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-15, -60, 30, 100); }
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 38, 12, 0, 0, Math.PI * 2); ctx.fill();
+    const drawH = 290; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height || 0.6) * drawH; 
+    ctx.drawImage(Assets.chengxiImg, -drawW / 2, -230, drawW, drawH); 
     ctx.restore();
   },
   
   renderXiangMu(x, y, dir) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 15, 48, 14, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.xiangmuLoaded && Assets.xiangmuImg.height > 0) { 
-      const drawH = 380; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; 
-      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -300, drawW, drawH); 
-    } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-12, -80, 24, 25); }
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 40, 12, 0, 0, Math.PI * 2); ctx.fill();
+    const drawH = 310; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height || 0.6) * drawH; 
+    ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -250, drawW, drawH); 
     ctx.restore();
   },
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
