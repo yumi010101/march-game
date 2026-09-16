@@ -17,7 +17,6 @@
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.9rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
   
-  /* 觀景窗比例鎖定 21:9 */
   #stage-wrap { width: 100%; aspect-ratio: 21 / 9; background: #020305; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   #interact-prompt { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: none; z-index: 10; }
@@ -29,7 +28,8 @@
   .interact-btn { width: 120px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; }
   .touch-btn:active, .interact-btn:active { transform: scale(0.95); }
   
-  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 20px 24px calc(20px + env(safe-area-inset-bottom)); flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
+  /* 🪄 這裡把底部安全距離拉大 (加入額外 40px 空間)，讓對話與按鈕完美往上移 */
+  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 20px 24px calc(45px + env(safe-area-inset-bottom)); flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
   .speaker-name { font-size: 1.1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; } 
   .dialogue-body { font-size: 1.1rem; line-height: 1.6; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
   
@@ -125,7 +125,6 @@ var World = {
   partner: { x: 1100, y: 460, dir: -1 }, 
   activePrompt: null,
   
-  // 觀景窗大小 800x342，世界寬度 1400 實現真實捲軸
   viewportWidth: 800, viewportHeight: 342,
   worldWidth: 1400, worldHeight: 600, cameraX: 0,
 
@@ -159,7 +158,6 @@ var World = {
     this.player.x = Math.max(80, Math.min(this.worldWidth - 80, this.player.x)); 
     this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
     
-    // 真正的攝影機跟隨（畫面觀景窗寬度 800，相機以玩家為中心左右滑動）
     this.cameraX = this.player.x - 400;
     this.cameraX = Math.max(0, Math.min(this.worldWidth - this.viewportWidth, this.cameraX));
 
@@ -175,8 +173,6 @@ var World = {
   draw() {
     this.ctx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
     this.ctx.save();
-    
-    // 相機平移捲軸
     this.ctx.translate(-this.cameraX, 0);
 
     if (Flow.currentAct === 2) {
@@ -284,7 +280,7 @@ var Puzzle = {
     }
     if (this.type !== 3) {
       this.wCtx.fillStyle = "#030406"; this.wCtx.fillRect(0, 0, 300, 90); this.wCtx.strokeStyle = this.isAReady ? "#3fb950" : "#f85149"; this.wCtx.beginPath();
-      for(let i=0; i<=30; i++) { const x = i*10; const y = 45 + Math.sin(i*0.4 + this.phase) * (this.isAReady ? 10 : 30) * (this.isAReady ? Math.sin(i*0.3+this.phase) : (Math.random()-0.5)*2); if(i===0) this.wCtx.moveTo(x,y); else this.wCent.lineTo(x,y); }
+      for(let i=0; i<=30; i++) { const x = i*10; const y = 45 + Math.sin(i*0.4 + this.phase) * (this.isAReady ? 10 : 30) * (this.isAReady ? Math.sin(i*0.3+this.phase) : (Math.random()-0.5)*2); if(i===0) this.wCtx.moveTo(x,y); else this.wCtx.lineTo(x,y); }
       this.wCtx.stroke(); this.phase += 0.15;
     }
     requestAnimationFrame(() => this.puzzleLoop());
