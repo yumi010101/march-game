@@ -1,6 +1,13 @@
 const Assets = {
-  chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(),
-  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false,
+  chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(),
+  chengxiLoaded: false, theaterBgLoaded: false, xiangmuLoaded: false, roomBgLoaded: false,
+  init() { 
+    this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
+    this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
+    this.xiangmuImg.src = 'xiangmu.png'; this.xiangmuImg.onload = () => this.xiangmuLoaded = true;
+    this.roomBg.src = 'room-bg.png'; this.roomBg.onload = () => this.roomBgLoaded = true;
+  }
+};
   init() { 
     this.chengxiImg.src = 'chengxi.png'; this.chengxiImg.onload = () => this.chengxiLoaded = true; 
     this.theaterBg.src = 'theater-bg.png'; this.theaterBg.onload = () => this.theaterBgLoaded = true; 
@@ -138,8 +145,8 @@ const World = {
       if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, 800, 320); else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#121722"; this.ctx.fillRect(0, 210, 800, 110); }
       this.ctx.fillStyle = "#2d241c"; this.ctx.fillRect(340, 190, 80, 40); this.ctx.fillStyle = "#111"; this.ctx.beginPath(); this.ctx.ellipse(380, 185, 20, 8, 0, 0, Math.PI*2); this.ctx.fill();
     } else if (Flow.currentAct === 3) {
-      this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#11151f"; this.ctx.fillRect(0, 210, 800, 110);
-      this.ctx.fillStyle = "#1c2130"; this.ctx.fillRect(300, 80, 160, 130); this.ctx.fillStyle = "#3e2723"; this.ctx.fillRect(360, 200, 40, 15);
+      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, 800, 320); 
+      else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, 800, 320); }
     } else if (Flow.currentAct === 4) {
       this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, 800, 210); this.ctx.fillStyle = "#3d3428"; this.ctx.fillRect(0, 210, 800, 110); 
       this.ctx.fillStyle = "#8a9eb8"; this.ctx.globalAlpha = 0.6; this.ctx.beginPath(); this.ctx.moveTo(420, 80); this.ctx.lineTo(480, 70); this.ctx.lineTo(490, 180); this.ctx.lineTo(440, 200); this.ctx.fill(); this.ctx.globalAlpha = 1.0;
