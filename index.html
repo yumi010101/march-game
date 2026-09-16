@@ -17,7 +17,7 @@
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.9rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
   
-  #stage-wrap { width: 100%; aspect-ratio: 800 / 320; background: #020305; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; }
+  #stage-wrap { width: 100%; aspect-ratio: 21 / 9; background: #020305; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   #interact-prompt { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 10; }
   
@@ -102,13 +102,13 @@ var Flow = {
     document.getElementById('dialogue-actions').innerHTML = "";
     
     if (act === 2) {
-      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 200; World.partner.x = 900; 
+      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 300; World.partner.x = 1050; 
       this.startDialogue([ { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" }, { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" }, { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.95rem; margin-top:auto; padding:16px;">(提示：走到桌子旁按下 [E] 觸碰黑膠)</div>`; this.canInteract = true; });
     } else if (act === 3) {
-      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 400; 
+      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 600; 
       this.startDialogue([ { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" }, { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" }, { n: "程曦", t: "「海邊……」" }, { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.95rem; margin-top:auto; padding:16px;">(提示：走到舊皮鞋旁按下 [E] 進入夢境)</div>`; this.canInteract = true; });
     } else if (act === 4) {
-      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 250; World.partner.x = 850; 
+      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 350; World.partner.x = 1000; 
       this.startDialogue([ { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" }, { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" }, { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.95rem; margin-top:auto; padding:16px;">(提示：走到破碎的鏡子前按下 [E] 凝視)</div>`; this.canInteract = true; });
     }
   },
@@ -120,16 +120,18 @@ var Flow = {
 
 var World = {
   canvas: null, ctx: null, keys: {}, 
-  player: { x: 200, y: 210, speed: 4, dir: 1, isMoving: false, walkFrame: 0 }, 
-  partner: { x: 900, y: 210, dir: -1 }, 
+  player: { x: 300, y: 320, speed: 6, dir: 1, isMoving: false, walkFrame: 0 }, 
+  partner: { x: 1050, y: 320, dir: -1 }, 
   activePrompt: null,
   
-  // 啟動 1200 寬度的捲軸世界
-  worldWidth: 1200, cameraX: 0,
+  // 完美對應 21:9 比例的捲軸世界 (寬 1400，高 480，完全等比例)
+  worldWidth: 1400, worldHeight: 480, cameraX: 0,
 
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
-    this.canvas.width = 800; this.canvas.height = 320; this.ctx.imageSmoothingEnabled = false;
+    // 畫布解析度直接設為 21:9 的高解析標準 (1400x480)
+    this.canvas.width = 1400; this.canvas.height = 480; this.ctx.imageSmoothingEnabled = false;
+    
     window.addEventListener('keydown', e => { this.keys[e.key.toLowerCase()] = true; if(e.key.toLowerCase()==='e') this.handleInteract(); });
     window.addEventListener('keyup', e => this.keys[e.key.toLowerCase()] = false);
     this.setupTouch('btn-left', 'arrowleft'); this.setupTouch('btn-right', 'arrowright');
@@ -153,41 +155,38 @@ var World = {
     if (this.keys['a'] || this.keys['arrowleft']) { this.player.x -= this.player.speed; this.player.dir = -1; moving = true; }
     if (this.keys['d'] || this.keys['arrowright']) { this.player.x += this.player.speed; this.player.dir = 1; moving = true; }
     
-    this.player.x = Math.max(60, Math.min(this.worldWidth - 60, this.player.x)); 
+    this.player.x = Math.max(80, Math.min(this.worldWidth - 80, this.player.x)); 
     this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
     
-    // 攝影機跟隨
-    this.cameraX = this.player.x - 400;
-    this.cameraX = Math.max(0, Math.min(this.worldWidth - 800, this.cameraX));
+    // 攝影機以 1400 世界中的 700 為中心點跟隨
+    this.cameraX = this.player.x - 700;
+    this.cameraX = Math.max(0, Math.min(this.worldWidth - 1400, this.cameraX));
 
     const prompt = document.getElementById('interact-prompt');
     if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
     
-    // 21:9 寬圖的互動點座標
-    if (Flow.currentAct === 2 && Math.abs(this.player.x - 570) < 80) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
-    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 825) < 80) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
-    else if (Flow.currentAct === 4 && Math.abs(this.player.x - 675) < 80) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
+    // 21:9 比例下的互動點座標
+    if (Flow.currentAct === 2 && Math.abs(this.player.x - 900) < 100) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
+    else if (Flow.currentAct === 3 && Math.abs(this.player.x - 1150) < 100) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
+    else if (Flow.currentAct === 4 && Math.abs(this.player.x - 1000) < 100) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
     else { this.activePrompt = null; prompt.style.display = 'none'; }
   },
   
   draw() {
-    this.ctx.clearRect(0, 0, 800, 320);
+    this.ctx.clearRect(0, 0, this.worldWidth, this.worldHeight);
     this.ctx.save();
     this.ctx.translate(-this.cameraX, 0);
 
-    // 完美適配 21:9 的寬螢幕捲軸繪製 (不裁切上下，完整呈現)
-    const bgW = this.worldWidth;
-    const bgH = 320; 
-
+    // 背景以完美的 1400x480 繪製，絕不變形、不壓扁、不裁切
     if (Flow.currentAct === 2) {
-      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, bgW, bgH); 
-      else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, bgW, 320); }
+      if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, this.worldWidth, this.worldHeight); 
+      else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight); }
     } else if (Flow.currentAct === 3) {
-      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, bgW, bgH);
-      else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, bgW, 320); }
+      if (Assets.roomBgLoaded) this.ctx.drawImage(Assets.roomBg, 0, 0, this.worldWidth, this.worldHeight);
+      else { this.ctx.fillStyle = "#040508"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight); }
     } else if (Flow.currentAct === 4) {
-      if (Assets.barBgLoaded) this.ctx.drawImage(Assets.barBg, 0, 0, bgW, bgH);
-      else { this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, bgW, 320); }
+      if (Assets.barBgLoaded) this.ctx.drawImage(Assets.barBg, 0, 0, this.worldWidth, this.worldHeight);
+      else { this.ctx.fillStyle = "#26211a"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight); }
     }
     
     if (Flow.currentAct !== 3) this.renderXiangMu(this.partner.x, this.partner.y, this.partner.dir);
@@ -198,21 +197,21 @@ var World = {
   
   renderChengXi(x, y, dir, bounce) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 72, 24, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 35, 12, 0, 0, Math.PI * 2); ctx.fill();
     if (Assets.chengxiLoaded) { 
-      const drawH = 240; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; 
-      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -160, drawW, drawH); 
-    } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-10, -30, 20, 50); }
+      const drawH = 350; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; 
+      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -240, drawW, drawH); 
+    } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-15, -50, 30, 80); }
     ctx.restore();
   },
   
   renderXiangMu(x, y, dir) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 74, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 38, 12, 0, 0, Math.PI * 2); ctx.fill();
     if (Assets.xiangmuLoaded) { 
-      const drawH = 255; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; 
-      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -173, drawW, drawH); 
-    } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-8, -48, 16, 14); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-7, -36, 15, 15); ctx.fillStyle = "#1e2430"; ctx.fillRect(-10, -14, 20, 48); ctx.fillStyle = "#161b24"; ctx.fillRect(-10, 34, 8, 40); ctx.fillRect(2, 34, 8, 40); }
+      const drawH = 370; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; 
+      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -255, drawW, drawH); 
+    } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-12, -70, 24, 20); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-10, -50, 20, 20); }
     ctx.restore();
   },
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
