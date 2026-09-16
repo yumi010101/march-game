@@ -124,12 +124,11 @@ var World = {
   partner: { x: 1050, y: 320, dir: -1 }, 
   activePrompt: null,
   
-  // 完美對應 21:9 比例的捲軸世界 (寬 1400，高 480，完全等比例)
+  // 完美啟用 1400x480 捲軸世界
   worldWidth: 1400, worldHeight: 480, cameraX: 0,
 
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
-    // 畫布解析度直接設為 21:9 的高解析標準 (1400x480)
     this.canvas.width = 1400; this.canvas.height = 480; this.ctx.imageSmoothingEnabled = false;
     
     window.addEventListener('keydown', e => { this.keys[e.key.toLowerCase()] = true; if(e.key.toLowerCase()==='e') this.handleInteract(); });
@@ -158,14 +157,13 @@ var World = {
     this.player.x = Math.max(80, Math.min(this.worldWidth - 80, this.player.x)); 
     this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
     
-    // 攝影機以 1400 世界中的 700 為中心點跟隨
+    // 攝影機自動跟隨
     this.cameraX = this.player.x - 700;
     this.cameraX = Math.max(0, Math.min(this.worldWidth - 1400, this.cameraX));
 
     const prompt = document.getElementById('interact-prompt');
     if (!Flow.canInteract) { this.activePrompt = null; prompt.style.display = 'none'; return; }
     
-    // 21:9 比例下的互動點座標
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 900) < 100) { this.activePrompt = 'ITEM_VINYL'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰黑膠唱片"; }
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 1150) < 100) { this.activePrompt = 'ITEM_DREAM'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 1000) < 100) { this.activePrompt = 'ITEM_DANCE'; prompt.style.display = 'block'; prompt.innerText = "點擊 [E] 凝視破碎鏡子"; }
@@ -175,9 +173,10 @@ var World = {
   draw() {
     this.ctx.clearRect(0, 0, this.worldWidth, this.worldHeight);
     this.ctx.save();
+    
+    // 【開啟捲軸運鏡】
     this.ctx.translate(-this.cameraX, 0);
 
-    // 背景以完美的 1400x480 繪製，絕不變形、不壓扁、不裁切
     if (Flow.currentAct === 2) {
       if (Assets.theaterBgLoaded) this.ctx.drawImage(Assets.theaterBg, 0, 0, this.worldWidth, this.worldHeight); 
       else { this.ctx.fillStyle = "#0a0d14"; this.ctx.fillRect(0, 0, this.worldWidth, this.worldHeight); }
