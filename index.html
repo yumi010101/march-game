@@ -14,27 +14,26 @@
   
   #game-wrapper { width: 100%; max-width: 800px; height: 100%; height: 100dvh; background: var(--bg-dark); display: flex; flex-direction: column; position: relative; overflow: hidden; }
   
-  header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.85rem;}
+  header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.85rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
   
-  /* 🪄 完美調整：將舞台比例改為寬 800、高 400 (2:1 黃金比例)，保留足夠的上下空間讓背景完全展現不壓扁 */
   #stage-wrap { width: 100%; aspect-ratio: 800 / 400; background: #020305; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   #interact-prompt { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: none; z-index: 10; }
   
-  #mobile-controls { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #0b0e14; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #mobile-controls { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #0b0e14; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .d-pad { display: flex; gap: 14px; }
-  .touch-btn, .interact-btn { height: 50px; background: #1f2633; border: 1px solid var(--border); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
-  .touch-btn { width: 65px; font-size: 1.5rem; } 
+  .touch-btn, .interact-btn { height: 48px; background: #1f2633; border: 1px solid var(--border); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; transition: 0.2s; }
+  .touch-btn { width: 60px; font-size: 1.4rem; } 
   .interact-btn { width: 110px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; }
   .touch-btn:active, .interact-btn:active { transform: scale(0.95); }
   
-  /* 🪄 完美調整：對話區高度適中，按鈕位置上移，徹底避開底部黑邊與導覽列 */
-  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 16px 20px calc(35px + env(safe-area-inset-bottom)); flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
-  .speaker-name { font-size: 1.05rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; } 
-  .dialogue-body { font-size: 1.05rem; line-height: 1.5; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
+  /* 🪄 調整重點：對話區改為更精煉的空間，並把底部距離拉大（90px），讓整塊對話與按鈕往下沉、不壓畫面 */
+  #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 14px 20px 90px; flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
+  .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; } 
+  .dialogue-body { font-size: 1rem; line-height: 1.5; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
   
-  .action-btn-sm { padding: 12px 18px; background: rgba(31,38,51,0.8); border: 1px solid #3d4b66; color: #fff; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: block; width: 100%; margin-top: auto; text-align: center; transition: 0.2s; }
+  .action-btn-sm { padding: 12px 18px; background: rgba(31,38,51,0.8); border: 1px solid #3d4b66; color: #fff; border-radius: 8px; font-size: 1rem; cursor: pointer; display: block; width: 100%; margin-top: auto; text-align: center; transition: 0.2s; }
   .action-btn-sm:active { background: #3d4b66; }
   
   #puzzle-overlay, #story-modal { position: absolute; inset: 0; z-index: 50; display: none; background: rgba(5,6,8,0.98); padding: 20px; overflow-y: auto; flex-direction: column; touch-action: pan-y; }
@@ -105,13 +104,13 @@ var Flow = {
     
     if (act === 2) {
       sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 350; World.partner.x = 1100; 
-      this.startDialogue([ { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" }, { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" }, { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.9rem; margin-top:auto; padding:8px;">(提示：點擊下方按鈕或按左右鍵移動，走到桌子旁按 E)</div>`; this.canInteract = true; });
+      this.startDialogue([ { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" }, { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" }, { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.85rem; margin-top:auto; padding:6px;">(提示：點擊下方按鈕或按左右鍵移動，走到桌子旁按 E)</div>`; this.canInteract = true; });
     } else if (act === 3) {
       sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 600; 
-      this.startDialogue([ { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" }, { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" }, { n: "程曦", t: "「海邊……」" }, { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.9rem; margin-top:auto; padding:8px;">(提示：走到舊皮鞋旁按下 [E] 進入夢境)</div>`; this.canInteract = true; });
+      this.startDialogue([ { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" }, { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" }, { n: "程曦", t: "「海邊……」" }, { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.85rem; margin-top:auto; padding:6px;">(提示: 走到舊皮鞋旁按下 [E] 進入夢境)</div>`; this.canInteract = true; });
     } else if (act === 4) {
       sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 400; World.partner.x = 1050; 
-      this.startDialogue([ { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" }, { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" }, { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.9rem; margin-top:auto; padding:8px;">(提示：走到破碎的鏡子前按下 [E] 凝視)</div>`; this.canInteract = true; });
+      this.startDialogue([ { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" }, { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" }, { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.85rem; margin-top:auto; padding:6px;">(提示: 走到破碎鏡子前按 [E])</div>`; this.canInteract = true; });
     }
   },
   afterVinylPuzzle() { this.startDialogue([ { n: "系統", t: "一個穿著舞鞋的女孩身處昏黃燈光下的舞池，一邊跳舞，一邊哭泣，彷彿在低聲懇求：「不要走……求你……」" }, { n: "系統", t: "程曦猛地回神，手開始顫抖，唱片不穩，輕輕一滑，啪嗒落地。" }, { n: "系統", t: "她驚了一下，迅速後退半步，深吸一口氣，連忙戴上手套。" }, { n: "戲院老闆", t: "「還好吧？這唱片有點年紀了，要小心些。」" }, { n: "程曦", t: "「……對不起。」" }, { n: "戲院老闆", t: "「沒事。這是我偶然間找到的錄影機，看來是我叔叔和我媽媽在練習跳舞，不知道對你們有沒有幫助。」" }, { n: "系統", t: "錄影機裡傳來輕快的圓舞曲。程曦接過錄影機，決定回房間仔細梳理。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<button class="action-btn-sm" style="background:var(--accent); border:none;" onclick="Flow.setAct(3)">進入下一幕 ➔</button>`; }); },
@@ -122,12 +121,12 @@ var Flow = {
 
 var World = {
   canvas: null, ctx: null, keys: {}, 
-  player: { x: 350, y: 460, speed: 6, dir: 1, isMoving: false, walkFrame: 0 }, 
-  partner: { x: 1100, y: 460, dir: -1 }, 
+  player: { x: 350, y: 360, speed: 6, dir: 1, isMoving: false, walkFrame: 0 }, 
+  partner: { x: 1100, y: 360, dir: -1 }, 
   activePrompt: null,
   
   viewportWidth: 800, viewportHeight: 400,
-  worldWidth: 1400, worldHeight: 600, cameraX: 0,
+  worldWidth: 1400, worldHeight: 400, cameraX: 0,
 
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas'); this.ctx = this.canvas.getContext('2d');
@@ -195,21 +194,21 @@ var World = {
   
   renderChengXi(x, y, dir, bounce) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 15, 45, 14, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.chengxiLoaded) { 
-      const drawH = 340; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; 
-      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -260, drawW, drawH); 
-    } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-15, -60, 30, 100); }
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 35, 10, 0, 0, Math.PI * 2); ctx.fill();
+    if (Assets.chengxiLoaded && Assets.chengxiImg.height > 0) { 
+      const drawH = 240; const drawW = (Assets.chengxiImg.width / Assets.chengxiImg.height) * drawH; 
+      ctx.drawImage(Assets.chengxiImg, -drawW / 2, -180, drawW, drawH); 
+    } else { ctx.fillStyle = "#f0f4f8"; ctx.fillRect(-15, -60, 30, 80); }
     ctx.restore();
   },
   
   renderXiangMu(x, y, dir) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 15, 48, 14, 0, 0, Math.PI * 2); ctx.fill();
-    if (Assets.xiangmuLoaded) { 
-      const drawH = 360; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; 
-      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -275, drawW, drawH); 
-    } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-12, -80, 24, 25); ctx.fillStyle = "#ebd0bc"; ctx.fillRect(-10, -60, 20, 20); }
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 38, 10, 0, 0, Math.PI * 2); ctx.fill();
+    if (Assets.xiangmuLoaded && Assets.xiangmuImg.height > 0) { 
+      const drawH = 250; const drawW = (Assets.xiangmuImg.width / Assets.xiangmuImg.height) * drawH; 
+      ctx.drawImage(Assets.xiangmuImg, -drawW / 2, -190, drawW, drawH); 
+    } else { ctx.fillStyle = "#1a1f2c"; ctx.fillRect(-12, -70, 24, 20); }
     ctx.restore();
   },
   loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
