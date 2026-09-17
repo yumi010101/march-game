@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>誰在三月失了神 - 完整三幕劇</title>
-<link rel="preload" as="image" href="theater-bg.png?v=6" fetchpriority="high">
-<link rel="preload" as="image" href="chengxi.png?v=6" fetchpriority="high">
-<link rel="preload" as="image" href="xiangmu.png?v=6" fetchpriority="high">
+<link rel="preload" as="image" href="theater-bg.png?v=9" fetchpriority="high">
+<link rel="preload" as="image" href="chengxi.png?v=9" fetchpriority="high">
+<link rel="preload" as="image" href="xiangmu.png?v=9" fetchpriority="high">
 <style>
   :root { --bg-dark: #050608; --panel-bg: #11151f; --border: #232a3d; --text: #ffffff; --accent: #58a6ff; --memory: #e5b544; --danger: #f85149; --green: #3fb950; }
 
@@ -20,8 +20,8 @@
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.85rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
 
-  /* 嚴格鎖定 2:1 電影寬螢幕比例舞台 */
-  #stage-wrap { width: 100%; aspect-ratio: 2 / 1; background: #1c140f; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
+  /* ★ 舞台改為 4:3，搭配 800x600 觀景窗，找回強烈卷軸感！ */
+  #stage-wrap { width: 100%; aspect-ratio: 4 / 3; background: #1c140f; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: auto; }
   #interact-prompt { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: none; z-index: 10; }
 
@@ -34,7 +34,6 @@
   .interact-btn { width: 110px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; }
   .touch-btn:active, .interact-btn:active { transform: scale(0.95); }
 
-  /* 系統對話框獨立沉在下方，保留充足底部安全區與 padding */
   #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 12px 20px max(12px, env(safe-area-inset-bottom)); flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
   .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; }
   .dialogue-body { font-size: 1rem; line-height: 1.5; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
@@ -83,16 +82,16 @@
 
 <script>
 var Assets = {
-  VERSION: '6',
+  VERSION: '9',
   chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(), barBg: new Image(),
   _loaded: 0, _required: 3,
   _failed: [],
-  _version: 0,          // [優化] 圖片狀態變動計數，供畫面判斷是否需要重繪
-  _restStarted: false,  // [優化] 後兩幕背景是否已開始下載
+  _version: 0,          
+  _restStarted: false,  
   src(name) { return name + '?v=' + this.VERSION; },
   mark(img, label) {
     this._version++;
-    if (img.dataset.required !== '1') return;   // [優化] 只有第一幕必要圖才計入進度
+    if (img.dataset.required !== '1') return;   
     if (img.dataset.ready === '1' || img.dataset.failed === '1') return;
     img.dataset.ready = '1';
     this._loaded++;
@@ -107,7 +106,7 @@ var Assets = {
   },
   fail(img, label) {
     this._version++;
-    if (img.dataset.required !== '1') return;   // [優化] 後兩幕背景失敗不影響開場進度
+    if (img.dataset.required !== '1') return;   
     if (img.dataset.ready === '1' || img.dataset.failed === '1') return;
     img.dataset.failed = '1'; this._failed.push(label);
     const bar = document.getElementById('asset-progress-bar');
@@ -126,15 +125,13 @@ var Assets = {
       img.onerror = () => this.fail(img, label);
       img.src = this.src(name);
     };
-    // [優化] 只載入第一幕真正需要的三張圖，後兩幕背景等按下開始才下載，
-    // 避免開場就與 7MB 酒吧圖搶頻寬（原版註解寫了延後，但程式碼其實仍同時下載）。
     bind(this.chengxiImg, 'chengxi.png', '程曦', true);
     bind(this.theaterBg, 'theater-bg.png', '戲院背景', true);
     bind(this.xiangmuImg, 'xiangmu.png', '李相暮', true);
     this._bind = bind;
   },
   loadRest() {
-    if (this._restStarted) return;  // [優化] 避免重設 src 中斷既有下載
+    if (this._restStarted) return;  
     this._restStarted = true;
     this._bind(this.roomBg, 'room-bg.png', '房間背景', false);
     this._bind(this.barBg, 'bar-bg.png', '酒吧背景', false);
@@ -176,13 +173,13 @@ var Flow = {
     document.getElementById('dialogue-actions').innerHTML = "";
 
     if (act === 2) {
-      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 350; World.player.y = 550; World.partner.x = 1100; World.partner.y = 550;
+      sub.innerText = "第二幕 · 老戲院地下室"; badge.innerText = "第 29 場"; World.player.x = 350; World.player.y = 470; World.partner.x = 1100; World.partner.y = 470;
       this.startDialogue([ { n: "戲院老闆", t: "「這幾張是從戲院地下室翻出來的，泛黃磨損得厲害，你看看有沒有什麼用得上。」" }, { n: "系統", t: "程曦望著那些邊角破損的黑膠唱片，空氣裡有一種受潮的味道。" }, { n: "程曦", t: "(深吸一口氣，緩緩伸出手……)" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.85rem; margin-top:auto; padding:6px;">(提示：點擊下方按鈕或按左右鍵移動，走到桌子旁按 E)</div>`; this.canInteract = true; this.setControlsEnabled(true); });
     } else if (act === 3) {
-      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 600; World.player.y = 550; World.partner.y = 550;
+      sub.innerText = "第三幕 · 程曦房間 (夜)"; badge.innerText = "第 37 場"; World.player.x = 600; World.player.y = 470; World.partner.y = 470;
       this.startDialogue([ { n: "系統", t: "夜深人靜，窗簾隨風微動，月光落在程曦的臉上。" }, { n: "系統", t: "地板上，那雙從倉庫裡拿回的舊皮鞋靜靜擺著。" }, { n: "程曦", t: "「海邊……」" }, { n: "系統", t: "她下意識脫下手套，指尖輕觸鞋面，似乎仍有一絲濕氣。隨即，強烈的畫面湧入腦海……" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.85rem; margin-top:auto; padding:6px;">(提示: 走到舊皮鞋旁按下 [E] 進入夢境)</div>`; this.canInteract = true; this.setControlsEnabled(true); });
     } else if (act === 4) {
-      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 400; World.player.y = 550; World.partner.x = 1050; World.partner.y = 550;
+      sub.innerText = "第四幕 · 廢棄音樂酒吧"; badge.innerText = "第 74 場"; World.player.x = 400; World.player.y = 470; World.partner.x = 1050; World.partner.y = 470;
       this.startDialogue([ { n: "陳導", t: "「這裡，我打算作為那場舞會的取景地。」" }, { n: "系統", t: "天光斜灑入封存已久的酒吧，木地板泛著歲月的灰黃，四周貼滿斑駁的牆紙。" }, { n: "系統", t: "程曦走入表演空地，望著地上的老舊痕跡，一面破碎的鏡子映出了程曦的模樣。" } ], () => { document.getElementById('dialogue-actions').innerHTML = `<div style="text-align:center; color:#8b949e; font-size:0.85rem; margin-top:auto; padding:6px;">(提示: 走到破碎鏡子前按 [E])</div>`; this.canInteract = true; this.setControlsEnabled(true); });
     }
   },
@@ -194,23 +191,23 @@ var Flow = {
 
 var World = {
   canvas: null, ctx: null, keys: {},
-  player: { x: 350, y: 550, speed: 6, dir: 1, isMoving: false, walkFrame: 0 },
-  partner: { x: 1100, y: 550, dir: -1 },
+  player: { x: 350, y: 470, speed: 6, dir: 1, isMoving: false, walkFrame: 0 },
+  partner: { x: 1100, y: 470, dir: -1 },
   activePrompt: null,
 
-  viewportWidth: 800, viewportHeight: 400,
-  worldWidth: 1400, worldHeight: 700, cameraX: 0,
+  // ★ 核心修復：觀景窗改為 800x600 (4:3比例)，世界是 1400x600。保留 600px 的完美大面積橫向探索空間，且保證腳絕不會被切！
+  viewportWidth: 800, viewportHeight: 600,
+  worldWidth: 1400, worldHeight: 600, cameraX: 0,
 
-  // [優化] 快取與迴圈控制
   _running: false, _raf: 0, _sig: '',
   _bgCache: {}, _spriteCache: {}, _fallbackCache: {},
   _elPrompt: null, _elOverlay: null,
 
   init() {
     Assets.init(); this.canvas = document.getElementById('world-canvas');
-    // [優化] alpha:false 讓合成不必處理透明度，手機省一段 GPU 工作（背景永遠鋪滿，視覺不變）
     this.ctx = this.canvas.getContext('2d', { alpha: false });
-    this.canvas.width = 800; this.canvas.height = 400; this.ctx.imageSmoothingEnabled = true;
+    // ★ 畫布實體解析度設定為 800x600
+    this.canvas.width = 800; this.canvas.height = 600; this.ctx.imageSmoothingEnabled = true;
 
     this._elPrompt = document.getElementById('interact-prompt');
     this._elOverlay = document.getElementById('puzzle-overlay');
@@ -224,7 +221,6 @@ var World = {
     });
     window.addEventListener('keyup', e => { this.keys[e.key.toLowerCase()] = false; });
     window.addEventListener('blur', () => { this.keys = {}; });
-    // [優化] 切到背景分頁時停掉迴圈，回來再續跑，避免手機耗電與發熱
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.stop();
       else if (document.getElementById('start-screen').style.display === 'none' && document.getElementById('end-screen').style.display !== 'flex') this.start();
@@ -232,8 +228,6 @@ var World = {
     this.setupTouch('btn-left', 'arrowleft'); this.setupTouch('btn-right', 'arrowright');
     const btnAct = document.getElementById('btn-act');
     btnAct.addEventListener('pointerdown', e => { e.preventDefault(); this.handleInteract(); });
-    // [優化] 這裡不再啟動遊戲迴圈。原版在載入畫面就以 60fps 空跑 update+draw，
-    //        跟圖片解碼搶 CPU，是手機載入變慢的主因之一。改由 Flow.startGame() 啟動。
   },
   start() { if (this._running) return; this._running = true; this._raf = requestAnimationFrame(this._boundLoop); },
   stop() { this._running = false; if (this._raf) cancelAnimationFrame(this._raf); this._raf = 0; },
@@ -275,6 +269,7 @@ var World = {
     this.player.x = Math.max(80, Math.min(this.worldWidth - 80, this.player.x));
     this.player.isMoving = moving; if (moving) this.player.walkFrame += 0.2;
 
+    // ★ 相機置中於 800 寬的觀景窗 (中心點 400)
     this.cameraX = this.player.x - 400;
     this.cameraX = Math.max(0, Math.min(this.worldWidth - this.viewportWidth, this.cameraX));
 
@@ -285,7 +280,7 @@ var World = {
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 900) < 100) { nextPrompt = 'ITEM_VINYL'; nextText = "點擊 [E] 觸碰黑膠唱片"; }
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 1150) < 100) { nextPrompt = 'ITEM_DREAM'; nextText = "點擊 [E] 觸碰舊皮鞋"; }
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 1000) < 100) { nextPrompt = 'ITEM_DANCE'; nextText = "點擊 [E] 凝視破碎鏡子"; }
-    // [優化] 只有狀態真的改變時才動 DOM，省掉每幀的樣式寫入與版面計算
+    
     if (nextPrompt !== this.activePrompt) {
       this.activePrompt = nextPrompt;
       if (nextPrompt) { prompt.innerText = nextText; prompt.style.display = 'block'; }
@@ -293,8 +288,6 @@ var World = {
     }
   },
 
-  // [優化] 把原始大圖一次性縮放到 1400×700 離屏畫布，之後每幀都是 1:1 貼圖，
-  //        不再每秒 60 次對原尺寸大圖重新取樣。
   getScaledBg(img, key) {
     if (!img.complete || img.naturalWidth === 0) return null;
     const cached = this._bgCache[key];
@@ -330,7 +323,6 @@ var World = {
     return cv;
   },
 
-  // [優化] 只有畫面內容真的改變才重繪。對話、解謎、站著不動的時候不需要每幀重畫。
   needsRedraw() {
     const p = this.player, q = this.partner;
     const sig = Flow.currentAct + '|' + Math.round(this.cameraX) + '|' + Math.round(p.x) + '|' + p.dir + '|' +
@@ -364,68 +356,39 @@ var World = {
     ctx.fillStyle = act === 2 ? '#17141a' : act === 3 ? '#121722' : '#171313';
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = act === 2 ? '#211c20' : act === 3 ? '#202635' : '#241a19';
-    ctx.fillRect(0, 0, W, 390);
+    ctx.fillRect(0, 0, W, 330);
     ctx.fillStyle = act === 2 ? '#2b2528' : act === 3 ? '#2a3040' : '#302221';
-    ctx.fillRect(0, 390, W, 160);
+    ctx.fillRect(0, 330, W, 140);
     ctx.fillStyle = act === 2 ? '#31282a' : act === 3 ? '#302c2a' : '#30231f';
-    ctx.fillRect(0, 550, W, 150);
+    ctx.fillRect(0, 470, W, 130);
     ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 2;
-    for (let x = 0; x <= W; x += 70) { ctx.beginPath(); ctx.moveTo(x,550); ctx.lineTo(x,700); ctx.stroke(); }
-    for (let y = 575; y <= 700; y += 38) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-
-    if (act === 2) {
-      ctx.fillStyle = '#3a3030'; ctx.fillRect(720, 120, 430, 300);
-      ctx.fillStyle = '#171216'; ctx.fillRect(750, 150, 370, 250);
-      for (let r=0; r<3; r++) for (let c=0; c<6; c++) {
-        ctx.fillStyle = ['#6b4c3e','#80604a','#5d5960'][c%3]; ctx.fillRect(770+c*55, 170+r*72, 40, 52);
-      }
-      ctx.fillStyle = '#6b523e'; ctx.fillRect(820, 485, 170, 65);
-      ctx.fillStyle = '#b99b67'; ctx.fillRect(850, 468, 110, 18);
-      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(905, 477, 13, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#e5b544'; ctx.font = 'bold 18px sans-serif'; ctx.fillText('OLD RECORDS', 785, 105);
-    } else if (act === 3) {
-      ctx.fillStyle = '#0b0e16'; ctx.fillRect(170, 95, 300, 220);
-      ctx.strokeStyle = '#6b7384'; ctx.lineWidth = 8; ctx.strokeRect(170,95,300,220);
-      ctx.beginPath(); ctx.moveTo(320,95); ctx.lineTo(320,315); ctx.moveTo(170,205); ctx.lineTo(470,205); ctx.stroke();
-      ctx.fillStyle = '#66534c'; ctx.fillRect(560, 390, 430, 160);
-      ctx.fillStyle = '#b9a99b'; ctx.fillRect(590, 370, 370, 70);
-      ctx.fillStyle = '#45332d'; ctx.fillRect(720, 500, 70, 24); ctx.fillRect(820,500,70,24);
-      ctx.fillStyle = '#c7b59b'; ctx.fillRect(735, 475, 42, 25); ctx.fillRect(835,475,42,25);
-    } else {
-      ctx.fillStyle = '#4b3027'; ctx.fillRect(120, 385, 420, 165);
-      ctx.fillStyle = '#181417'; ctx.fillRect(155, 270, 350, 115);
-      for (let i=0;i<7;i++) { ctx.fillStyle = i%2 ? '#8b6a42' : '#55706a'; ctx.fillRect(180+i*43, 310-(i%3)*12, 20, 55); }
-      ctx.fillStyle = '#51464b'; ctx.beginPath(); ctx.moveTo(1050,150); ctx.lineTo(1260,210); ctx.lineTo(1160,430); ctx.lineTo(980,360); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#c4c8d0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(1050,165); ctx.lineTo(1140,285); ctx.lineTo(1060,385); ctx.moveTo(1250,215); ctx.lineTo(1170,300); ctx.stroke();
-    }
-    const g = ctx.createRadialGradient(900, 250, 20, 900, 250, 420);
-    g.addColorStop(0, 'rgba(229,181,68,.13)'); g.addColorStop(1, 'rgba(229,181,68,0)');
-    ctx.fillStyle = g; ctx.fillRect(500, 0, 800, 550);
+    for (let x = 0; x <= W; x += 70) { ctx.beginPath(); ctx.moveTo(x,470); ctx.lineTo(x,600); ctx.stroke(); }
+    for (let y = 495; y <= 600; y += 38) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
   },
+  
   renderChengXi(x, y, dir, bounce) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y + bounce); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 38, 12, 0, 0, Math.PI * 2); ctx.fill();
-    const drawH = 290;
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 8, 35, 10, 0, 0, Math.PI * 2); ctx.fill();
+    const drawH = 250;
     const sprite = this.getScaledSprite(Assets.chengxiImg, 'chengxi', drawH);
-    if (sprite) ctx.drawImage(sprite, -sprite.width / 2, -230);
-    else { ctx.fillStyle = '#ddd'; ctx.beginPath(); ctx.arc(0, -205, 22, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-28, -180, 56, 100); }
+    if (sprite) ctx.drawImage(sprite, -sprite.width / 2, -220);
+    else { ctx.fillStyle = '#ddd'; ctx.beginPath(); ctx.arc(0, -180, 20, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-25, -160, 50, 90); }
     ctx.restore();
   },
 
   renderXiangMu(x, y, dir) {
     const ctx = this.ctx; ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 10, 40, 12, 0, 0, Math.PI * 2); ctx.fill();
-    const drawH = 310;
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 8, 38, 10, 0, 0, Math.PI * 2); ctx.fill();
+    const drawH = 270;
     const sprite = this.getScaledSprite(Assets.xiangmuImg, 'xiangmu', drawH);
-    if (sprite) ctx.drawImage(sprite, -sprite.width / 2, -250);
-    else { ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.arc(0, -225, 22, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-30, -200, 60, 110); }
+    if (sprite) ctx.drawImage(sprite, -sprite.width / 2, -240);
+    else { ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.arc(0, -200, 20, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-28, -180, 56, 100); }
     ctx.restore();
   },
   loop() {
     if (!this._running) return;
     this._raf = requestAnimationFrame(this._boundLoop);
     this.update();
-    // [優化] 解謎面板全屏覆蓋時舞台看不見，直接跳過繪製
     if (this._elOverlay.classList.contains('show')) return;
     if (this.needsRedraw()) this.draw();
   }
@@ -487,7 +450,6 @@ var Puzzle = {
     if (this.type === 1) {
       this.overload = this.isTouch ? Math.min(100, this.overload + 0.3) : Math.max(0, this.overload - 0.8); this.clarity = this.isTouch ? Math.min(1.0, this.clarity + 0.02) : Math.max(0.1, this.clarity - 0.02);
       if (this.overload >= 100) { this.toggleTouch(); this.overload = 0; this.clarity = 0.1; alert("【過載】程曦手一抖，唱片差點掉落！"); }
-      // [優化] 進度條寬度四捨五入後才寫入 DOM，避免每幀觸發版面重算
       const ow = Math.round(this.overload);
       if (ow !== this._lastOverload) { this._lastOverload = ow; document.getElementById('p-overload-bar').style.width = ow + '%'; }
       this.isVReady = (this.clarity >= 0.85 && this.overload < 90);
