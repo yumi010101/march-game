@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>誰在三月失了神 - 完整三幕劇</title>
-<link rel="preload" as="image" href="theater-bg.png?v=11" fetchpriority="high">
-<link rel="preload" as="image" href="chengxi.png?v=11" fetchpriority="high">
-<link rel="preload" as="image" href="xiangmu.png?v=11" fetchpriority="high">
+<link rel="preload" as="image" href="theater-bg.png?v=12" fetchpriority="high">
+<link rel="preload" as="image" href="chengxi.png?v=12" fetchpriority="high">
+<link rel="preload" as="image" href="xiangmu.png?v=12" fetchpriority="high">
 <style>
   :root { --bg-dark: #050608; --panel-bg: #11151f; --border: #232a3d; --text: #ffffff; --accent: #58a6ff; --memory: #e5b544; --danger: #f85149; --green: #3fb950; }
 
@@ -15,11 +15,13 @@
 
   body { display: flex; justify-content: center; align-items: center; color: var(--text); font-family: -apple-system, sans-serif; }
 
+  /* 限制最大寬度為 550px，確保在電腦上舞台不會過高把對話框擠不見 */
   #game-wrapper { width: 100%; max-width: 550px; height: 100%; height: 100dvh; background: var(--bg-dark); display: flex; flex-direction: column; position: relative; overflow: hidden; margin: 0 auto; }
 
   header { background: #0b0e14; border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; font-size: 0.85rem;}
   .badge { color: var(--memory); border: 1px solid var(--memory); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
 
+  /* 4:3 比例舞台，搭配 800x600 觀景窗 */
   #stage-wrap { width: 100%; aspect-ratio: 4 / 3; background: #1c140f; position: relative; flex-shrink: 0; border-bottom: 2px solid #0f131a; overflow: hidden; }
   canvas#world-canvas { width: 100%; height: 100%; display: block; image-rendering: auto; }
   #interact-prompt { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.95); border: 1px solid var(--memory); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: none; z-index: 10; }
@@ -33,6 +35,7 @@
   .interact-btn { width: 110px; background: #252e3d; border-color: var(--memory); color: var(--memory); font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; }
   .touch-btn:active, .interact-btn:active { transform: scale(0.95); }
 
+  /* 對話框給予足夠的 min-height 確保絕對不會消失 */
   #dialogue-area { background: linear-gradient(180deg, #121722 0%, #050608 100%); padding: 12px 20px max(12px, env(safe-area-inset-bottom)); flex: 1; min-height: 150px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 10px 20px rgba(0,0,0,0.3); }
   .speaker-name { font-size: 1rem; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px; }
   .dialogue-body { font-size: 1rem; line-height: 1.5; color: #e6edf3; flex-shrink: 0; letter-spacing: 0.5px; }
@@ -59,6 +62,7 @@
   .start-game-btn { padding: 16px 40px; font-size: 1.2rem; font-weight: bold; background: var(--accent); color: #fff; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(88,166,255,0.3); transition: 0.2s; }
   .start-game-btn:active { transform: scale(0.95); background: #3b8eed; }
 
+  /* 電腦版：外框變為圓角懸浮卡片 */
   @media (min-width: 600px) { #game-wrapper { height: 95vh; max-height: 900px; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); } }
 </style>
 </head>
@@ -80,26 +84,26 @@
 </div>
 
 <script>
-// ★ 新增的聲音管理員，直接讀取免費線上音檔
+// ★ 本地檔案聲音管理員
 var Sound = {
-  bgm: new Audio('https://upload.wikimedia.org/wikipedia/commons/1/14/Moonlight_Sonata_Adagio_Sostenuto.ogg'),
-  interact: new Audio('https://upload.wikimedia.org/wikipedia/commons/b/b3/A_sharp_1.ogg'),
+  bgm: new Audio('bgm.mp3'),
+  interact: new Audio('interact.mp3'),
   init() {
     this.bgm.loop = true;          // BGM 無限循環播放
-    this.bgm.volume = 0.3;         // 音量稍微調小，避免蓋過台詞感
-    this.interact.volume = 0.7;    // 互動音效音量
+    this.bgm.volume = 0.4;         // 背景音樂音量
+    this.interact.volume = 1.0;    // 互動音效音量
   },
   playBGM() {
-    this.bgm.play().catch(e => console.log("BGM 等待互動後播放"));
+    this.bgm.play().catch(e => console.log("BGM 播放失敗，等待互動後播放"));
   },
   playInteract() {
     this.interact.currentTime = 0; // 每次播放前歸零
-    this.interact.play().catch(e => console.log("音效等待互動後播放"));
+    this.interact.play().catch(e => console.log("音效播放失敗"));
   }
 };
 
 var Assets = {
-  VERSION: '11',
+  VERSION: '12',
   chengxiImg: new Image(), theaterBg: new Image(), xiangmuImg: new Image(), roomBg: new Image(), barBg: new Image(),
   _loaded: 0, _required: 3,
   _failed: [],
@@ -158,7 +162,6 @@ var Assets = {
 var Flow = {
   currentAct: 2, canInteract: false, dialogueActive: false, dialogueQueue: [], onDialogueEnd: null,
   
-  // ★ 開始遊戲時觸發 BGM 播放
   startGame() { 
     document.getElementById('start-screen').style.display = 'none'; 
     this.setAct(2); 
@@ -274,7 +277,6 @@ var World = {
     el.addEventListener('lostpointercapture', release);
   },
   
-  // ★ 觸發互動時播放音效
   handleInteract() {
     if (!Flow.canInteract || Flow.dialogueActive || this._elOverlay.classList.contains('show')) return;
     
@@ -306,9 +308,7 @@ var World = {
 
     let nextPrompt = null, nextText = '';
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 900) < 100) { nextPrompt = 'ITEM_VINYL'; nextText = "點擊 [E] 觸碰黑膠唱片"; }
-    // ★ 皮鞋修改到 x = 950
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 950) < 100) { nextPrompt = 'ITEM_DREAM'; nextText = "點擊 [E] 觸碰舊皮鞋"; }
-    // ★ 鏡子修改到背景正中央 x = 700
     else if (Flow.currentAct === 4 && Math.abs(this.player.x - 700) < 100) { nextPrompt = 'ITEM_DANCE'; nextText = "點擊 [E] 凝視破碎鏡子"; }
     
     if (nextPrompt !== this.activePrompt) {
@@ -503,7 +503,6 @@ var Puzzle = {
   }
 };
 
-// ★ 將世界與聲音同時初始化
 window.addEventListener('DOMContentLoaded', () => { 
   World.init(); 
   Sound.init(); 
