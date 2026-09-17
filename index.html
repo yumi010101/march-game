@@ -279,7 +279,7 @@ var World = {
     let nextPrompt = null, nextText = '';
     if (Flow.currentAct === 2 && Math.abs(this.player.x - 900) < 100) { nextPrompt = 'ITEM_VINYL'; nextText = "點擊 [E] 觸碰黑膠唱片"; }
     else if (Flow.currentAct === 3 && Math.abs(this.player.x - 1000) < 100) { nextPrompt = 'ITEM_DREAM'; nextText = "點擊 [E] 觸碰舊皮鞋"; }
-    else if (Flow.currentAct === 4 && Math.abs(this.player.x - 200) < 120) { nextPrompt = 'ITEM_DANCE'; nextText = "點擊 [E] 凝視破碎鏡子"; }
+    else if (Flow.currentAct === 4 && Math.abs(this.player.x - 700) < 100) { nextPrompt = 'ITEM_DANCE'; nextText = "點擊 [E] 凝視破碎鏡子"; }
     
     if (nextPrompt !== this.activePrompt) {
       this.activePrompt = nextPrompt;
